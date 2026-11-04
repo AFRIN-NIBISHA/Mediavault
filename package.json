@@ -1,0 +1,28 @@
+{
+  "name": "mediavault",
+  "version": "1.0.0",
+  "description": "MediaVault - Unified Digital Asset & File Management Platform",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "seed": "cd backend && npm run db:seed",
+    "test:backend": "cd backend && node test_suite.js"
+  },
+  "keywords": [
+    "digital-asset-management",
+    "dam",
+    "file-management",
+    "photo-toolkit",
+    "pdf-tools",
+    "duplicate-detection",
+    "perceptual-hashing",
+    "version-history",
+    "react",
+    "nodejs",
+    "postgresql"
+  ],
+  "author": "MediaVault Core Team",
+  "license": "MIT"
+}
+
