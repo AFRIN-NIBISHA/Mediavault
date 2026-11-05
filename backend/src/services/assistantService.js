@@ -219,6 +219,26 @@ export function parseIntent(message = '', fileMeta = {}) {
     intent = 'convert_format';
     targetFormat = 'webp';
   }
+  // Audio to Transcript / Text
+  else if (
+    intent === 'general_chat' &&
+    (
+      lower.includes('transcript') ||
+      lower.includes('audio to text') ||
+      lower.includes('speech to text') ||
+      lower.includes('transcribe') ||
+      lower.includes('audio-va text') ||
+      lower.includes('audio va text') ||
+      lower.includes('audio transcript') ||
+      lower.includes('text ah mathu') ||
+      lower.includes('text-ah mathu') ||
+      lower.includes('டிரான்ஸ்கிரிப்ட்') ||
+      (['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'webm'].includes(ext) && (lower.includes('text') || lower.includes('transcript') || lower.includes('subtitles')))
+    )
+  ) {
+    intent = 'audio_to_transcript';
+    targetFormat = lower.includes('docx') ? 'docx' : (lower.includes('srt') ? 'srt' : (lower.includes('json') ? 'json' : 'txt'));
+  }
   // 5. IMAGE ADJUSTMENTS
   // Brightness
   else if (
@@ -402,6 +422,16 @@ export async function executeAssistantAction(parsed, inputPath, originalName, up
     }
     tempOutExt = targetFormat;
   }
+  // 4b. AUDIO TO TRANSCRIPT
+  else if (intent === 'audio_to_transcript') {
+    operationTitle = `Audio to Transcript (${targetFormat.toUpperCase()})`;
+    outputPath = path.join(uploadsDir, `assistant-${timestamp}-${cleanBase}.${targetFormat}`);
+    resultMeta = await conversionService.convertAudioToTranscript(inputPath, outputPath, {
+      language: lower.includes('tamil') || lower.includes('தமிழ்') ? 'tam' : (lower.includes('hindi') ? 'hin' : 'eng'),
+      targetFormat
+    });
+    tempOutExt = targetFormat;
+  }
   // 5. IMAGE ADJUSTMENTS
   else if (['brighten', 'darken', 'contrast', 'grayscale', 'sepia', 'sharpen', 'blur', 'rotate'].includes(intent)) {
     let pipeline = sharp(inputPath);
@@ -526,6 +556,8 @@ export function buildAssistantResponse(parsed, actionResult) {
       return `Unga image-la background-ah clean-ah remove panniten! Transparent PNG ready-ah iruku. Keela irunthu direct-ah download pannikalam! ✂️✨`;
     } else if (intent === 'convert_format') {
       return `Super! Unga document-ah ${actionResult.outExt.toUpperCase()}-ah convert panni mudichiten. Formatting & alignment ellamae neat-ah maintain aagi iruku. Check out the preview! 📄✨`;
+    } else if (intent === 'audio_to_transcript') {
+      return `Super! Unga audio file-ah analyze panni transcript (${actionResult.outExt.toUpperCase()}) create panniten! Spoken intervals & timestamps ellamae neat-ah extract aagi iruku. Keela check out pannikalam! 🎙️📄✨`;
     } else if (['brighten', 'darken', 'contrast', 'grayscale', 'sepia', 'sharpen', 'blur', 'rotate'].includes(intent)) {
       return `Done! Neenga ketta mathiri "${op}" edit panni mudichiten! Keela preview-la changes pathutu download pannikonga! 🎨✨`;
     } else if (intent === 'compress') {
@@ -545,6 +577,8 @@ export function buildAssistantResponse(parsed, actionResult) {
       return `உங்கள் படத்தின் பின்னணி (Background) வெற்றிகரமாக நீக்கப்பட்டது. வெளிப்படையான PNG கோப்பு தயாராக உள்ளது! ✂️✨`;
     } else if (intent === 'convert_format') {
       return `அற்புதம்! உங்கள் ஆவணம் வெற்றிகரமாக ${actionResult.outExt.toUpperCase()} வடிவத்திற்கு மாற்றப்பட்டது. அலைன்மென்ட் மற்றும் வடிவமைப்பு துல்லியமாகப் பாதுகாக்கப்பட்டுள்ளது! 📄✨`;
+    } else if (intent === 'audio_to_transcript') {
+      return `அற்புதம்! உங்கள் ஆடியோ கோப்பு வெற்றிகரமாக உரை வடிவத்திற்கு (Transcript - ${actionResult.outExt.toUpperCase()}) மாற்றப்பட்டது. துல்லியமான நேரக் குறிப்புகள் (Timestamps) மற்றும் வசனங்களுடன் தயாராக உள்ளது! 🎙️📄✨`;
     }
     return `முடிந்தது! நீங்கள் கோரிய "${op}" செயல்பாடு வெற்றிகரமாக முடிக்கப்பட்டது. உங்கள் கோப்பைக் கீழே இருந்து பதிவிறக்கிக் கொள்ளலாம்! 🌟✨`;
   } else {
@@ -557,6 +591,8 @@ export function buildAssistantResponse(parsed, actionResult) {
       return `I've cleanly removed the background from your image! The subject has been isolated into a transparent PNG. Check the live preview below! ✂️`;
     } else if (intent === 'convert_format') {
       return `Conversion complete! Your file is now converted to ${actionResult.outExt.toUpperCase()} with layout, typography, and styling preserved. 📄`;
+    } else if (intent === 'audio_to_transcript') {
+      return `Transcription complete! Your audio has been transcribed into ${actionResult.outExt.toUpperCase()} with speech segments, duration analysis, and timestamps. You can preview or download below! 🎙️📄`;
     }
     return `I've successfully applied "${op}" to your file! You can preview the result and download it right below. 👍`;
   }

@@ -143,8 +143,12 @@ export async function handleUniversalConvert(req, res, next) {
       }
     }
     // 8. Audio conversions
-    else if (['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a'].includes(ext)) {
-      resultMeta = await conversionService.convertAudio(input.filePath, tempOutputPath, opts);
+    else if (['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'webm'].includes(ext)) {
+      if (['txt', 'text', 'docx', 'srt', 'json'].includes(normTarget) || toolId === 'audio-to-text') {
+        resultMeta = await conversionService.convertAudioToTranscript(input.filePath, tempOutputPath, opts);
+      } else {
+        resultMeta = await conversionService.convertAudio(input.filePath, tempOutputPath, opts);
+      }
     } else {
       throw new Error(`Format .${ext} is currently unsupported for conversion to .${normTarget}`);
     }
@@ -189,6 +193,9 @@ export async function handleUniversalConvert(req, res, next) {
       filename: outFilename,
       downloadUrl: savedFile ? `/api/files/${savedFile.id}/download` : null,
       previewUrl,
+      transcript: resultMeta.transcript || null,
+      segments: resultMeta.segments || null,
+      duration: resultMeta.duration || null,
       metadata: resultMeta
     });
   } catch (err) {
@@ -211,6 +218,61 @@ export async function handleOcr(req, res, next) {
       text: ocrResult.text,
       confidence: ocrResult.confidence,
       lines: ocrResult.lines
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Audio to Transcript / Text
+ */
+export async function handleAudioToText(req, res, next) {
+  try {
+    const input = await resolveInput(req);
+    const {
+      language = 'eng',
+      targetFormat = 'txt',
+      includeTimestamps = true,
+      clientTranscript = null,
+      saveToVault = true
+    } = req.body;
+
+    const normTarget = (targetFormat || 'txt').toLowerCase().replace('.', '');
+    const cleanBase = path.parse(input.originalName).name;
+    const outFilename = `${cleanBase}-transcript.${normTarget}`;
+    const uploadDir = path.resolve(process.cwd(), 'uploads');
+    const tempOutputPath = path.join(uploadDir, `transcript-${Date.now()}-${uuidv4()}.${normTarget}`);
+
+    const resultMeta = await conversionService.convertAudioToTranscript(
+      input.filePath,
+      tempOutputPath,
+      { language, includeTimestamps, clientTranscript }
+    );
+
+    const outputBuffer = fs.readFileSync(tempOutputPath);
+    let savedFile = null;
+
+    if (saveToVault) {
+      savedFile = await saveBufferAsMediaVaultFile(
+        req.user.id,
+        outputBuffer,
+        outFilename,
+        { summary: `Audio Transcript (${resultMeta.duration || 'Full'})` }
+      );
+    }
+
+    res.json({
+      success: true,
+      message: 'Audio transcribed successfully.',
+      file: savedFile,
+      filename: outFilename,
+      downloadUrl: savedFile ? `/api/files/${savedFile.id}/download` : null,
+      transcript: resultMeta.transcript,
+      segments: resultMeta.segments,
+      duration: resultMeta.duration,
+      provider: resultMeta.provider,
+      metadata: resultMeta
     });
   } catch (err) {
     next(err);
@@ -309,6 +371,7 @@ export async function getToolsCatalog(req, res) {
     { id: 'audio-mp3', studio: 'audio', title: 'Audio to MP3', desc: 'Convert WAV, AAC, OGG, or FLAC to MP3', from: 'wav', to: 'mp3' },
     { id: 'audio-wav', studio: 'audio', title: 'Audio to WAV', desc: 'Convert audio to uncompressed studio WAV', from: 'mp3', to: 'wav' },
     { id: 'audio-compress', studio: 'audio', title: 'Compress Audio', desc: 'Optimize bitrate (128k/64k) to reduce audio file size', from: 'mp3', to: 'mp3' },
+    { id: 'audio-to-text', studio: 'audio', title: 'Audio to Transcript / Text', desc: 'Transcribe speech in audio to readable text, timestamps, subtitles & Word documents', from: 'audio', to: 'txt' },
 
     // Video Studio
     { id: 'video-mp4', studio: 'video', title: 'Video to MP4', desc: 'Convert MOV, AVI, or WebM to universal MP4', from: 'mov', to: 'mp4' },

@@ -3,6 +3,7 @@ import {
   handleUniversalConvert,
   handleOcr,
   handleCompression,
+  handleAudioToText,
   getToolsCatalog,
   handleCreateArchive,
   handleExtractArchive
@@ -19,6 +20,7 @@ router.get('/catalog', getToolsCatalog);
 router.use(authenticate);
 
 router.post('/convert', uploadSingle, handleUniversalConvert);
+router.post('/audio-to-text', uploadSingle, handleAudioToText);
 router.post('/ocr', uploadSingle, handleOcr);
 router.post('/compress', uploadSingle, handleCompression);
 router.post('/archive/create', uploadMultiple, handleCreateArchive);

@@ -24,7 +24,10 @@ import {
   Zap,
   Play,
   RotateCw,
-  FileCheck
+  FileCheck,
+  Mic,
+  MicOff,
+  Volume2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { formatBytes } from '../utils/formatters';
@@ -93,6 +96,7 @@ const TOOLS = [
   { id: 'audio-to-mp3', studio: 'audio', title: 'Audio to MP3', desc: 'Convert WAV, AAC, OGG, or FLAC to universal MP3 audio.', from: 'AUDIO', to: 'MP3', icon: Music },
   { id: 'audio-to-wav', studio: 'audio', title: 'Audio to WAV', desc: 'Convert compressed audio to uncompressed studio-grade WAV.', from: 'AUDIO', to: 'WAV', icon: Music },
   { id: 'audio-compress', studio: 'audio', title: 'Audio Compression', desc: 'Reduce audio file size by optimizing bitrate (128k / 64k).', from: 'MP3/WAV', to: 'MP3', icon: Zap },
+  { id: 'audio-to-text', studio: 'audio', title: 'Audio to Transcript / Text', desc: 'Transcribe speech in audio to readable text, timestamps, subtitles & Word documents.', from: 'AUDIO', to: 'TXT', icon: FileText },
 
   // Video
   { id: 'video-to-mp4', studio: 'video', title: 'Video to MP4', desc: 'Transcode MOV, AVI, or WebM into widely compatible H.264 MP4.', from: 'VIDEO', to: 'MP4', icon: Film },
@@ -127,6 +131,11 @@ export function UniversalConverterPage() {
   const [watermarkText, setWatermarkText] = useState('CONFIDENTIAL');
   const [bitrate, setBitrate] = useState('128k');
   const [ocrLanguage, setOcrLanguage] = useState('eng');
+  const [audioLanguage, setAudioLanguage] = useState('eng');
+  const [includeTimestamps, setIncludeTimestamps] = useState(true);
+  const [isListening, setIsListening] = useState(false);
+  const [speechTranscript, setSpeechTranscript] = useState('');
+  const recognitionRef = useRef(null);
 
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
@@ -229,7 +238,33 @@ export function UniversalConverterPage() {
       };
 
       // Special tools routing
-      if (selectedTool.id === 'ai-ocr-text') {
+      if (selectedTool.id === 'audio-to-text') {
+        appendSourceFile();
+        formData.append('targetFormat', targetFormat || 'txt');
+        formData.append('language', audioLanguage);
+        formData.append('includeTimestamps', includeTimestamps ? 'true' : 'false');
+        if (speechTranscript) {
+          formData.append('clientTranscript', speechTranscript);
+        }
+        setProgressStatus('Neural Audio Engine transcribing speech & timestamps...');
+        response = await api.post('/converter/audio-to-text', formData);
+        clearInterval(timer);
+        setProgress(100);
+        setProgressStatus('Transcription Complete!');
+        setResult({
+          type: 'transcript',
+          text: response.data.transcript,
+          segments: response.data.segments,
+          duration: response.data.duration,
+          provider: response.data.provider,
+          downloadUrl: response.data.downloadUrl,
+          filename: response.data.filename,
+          audioUrl: selectedFile instanceof File
+            ? URL.createObjectURL(selectedFile)
+            : (selectedFile?.vaultId ? `/api/files/${selectedFile.vaultId}/download` : null),
+          file: response.data.file
+        });
+      } else if (selectedTool.id === 'ai-ocr-text') {
         appendSourceFile();
         formData.append('language', ocrLanguage);
         setProgressStatus('AI Neural Engine analyzing characters & words...');
@@ -362,6 +397,61 @@ export function UniversalConverterPage() {
       navigator.clipboard.writeText(result.text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const copyTranscriptToClipboard = () => {
+    const textToCopy = result?.text || result?.transcript;
+    if (textToCopy) {
+      navigator.clipboard.writeText(textToCopy);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const toggleSpeechRecognition = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Live in-browser speech recognition is available in Google Chrome and Microsoft Edge.');
+      return;
+    }
+
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+    } else {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = audioLanguage === 'tam' ? 'ta-IN' : (audioLanguage === 'hin' ? 'hi-IN' : 'en-US');
+
+        recognition.onresult = (event) => {
+          let current = '';
+          for (let i = 0; i < event.results.length; i++) {
+            current += event.results[i][0].transcript + ' ';
+          }
+          setSpeechTranscript(current.trim());
+        };
+
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error:', event.error);
+          setIsListening(false);
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognition.start();
+        recognitionRef.current = recognition;
+        setIsListening(true);
+      } catch (err) {
+        console.error('Failed to start speech recognition:', err);
+        setIsListening(false);
+      }
     }
   };
 
@@ -603,7 +693,7 @@ export function UniversalConverterPage() {
                   )}
 
                   {/* Audio Bitrate */}
-                  {selectedTool.studio === 'audio' && (
+                  {selectedTool.studio === 'audio' && selectedTool.id !== 'audio-to-text' && (
                     <div>
                       <label className="block text-xs font-medium text-surface-600 mb-1.5">
                         Audio Bitrate
@@ -676,6 +766,104 @@ export function UniversalConverterPage() {
                   </select>
                 </div>
               )}
+
+              {/* Audio to Transcript Settings */}
+              {selectedTool.id === 'audio-to-text' && (
+                <div className="space-y-4 pt-2 border-t border-surface-200/60">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <label className="block text-xs font-medium text-surface-600 mb-1.5">
+                        Transcript Format
+                      </label>
+                      <select
+                        value={targetFormat}
+                        onChange={(e) => setTargetFormat(e.target.value.toLowerCase())}
+                        className="w-full px-3 py-2 bg-white border border-surface-300 rounded-xl text-surface-900 font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                      >
+                        <option value="txt">TXT (Plain Text Document)</option>
+                        <option value="docx">DOCX (Microsoft Word Document)</option>
+                        <option value="srt">SRT (Subtitles with Timestamps)</option>
+                        <option value="json">JSON (Structured Timeline Data)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-surface-600 mb-1.5">
+                        Audio Spoken Language
+                      </label>
+                      <select
+                        value={audioLanguage}
+                        onChange={(e) => setAudioLanguage(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-surface-300 rounded-xl text-surface-900 font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                      >
+                        <option value="eng">English (Global / Indian Accent)</option>
+                        <option value="tam">Tamil (தமிழ்)</option>
+                        <option value="hin">Hindi (हिन्दी)</option>
+                        <option value="fra">French (Français)</option>
+                        <option value="deu">German (Deutsch)</option>
+                        <option value="spa">Spanish (Español)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="checkbox"
+                      id="includeTimestamps"
+                      checked={includeTimestamps}
+                      onChange={(e) => setIncludeTimestamps(e.target.checked)}
+                      className="rounded text-purple-600 focus:ring-purple-500 h-4 w-4"
+                    />
+                    <label htmlFor="includeTimestamps" className="text-xs font-medium text-surface-700 cursor-pointer">
+                      Include Timestamp Intervals <span className="text-surface-400 font-mono text-[11px]">[00:00:00 - 00:00:05]</span>
+                    </label>
+                  </div>
+
+                  {/* Optional Live In-Browser Web Speech Transcriber */}
+                  <div className="p-3.5 bg-purple-50/50 rounded-xl border border-purple-200/80 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Mic className={`w-4 h-4 ${isListening ? 'text-red-500 animate-pulse' : 'text-purple-600'}`} />
+                        <span className="text-xs font-bold text-surface-800">
+                          Live In-Browser Speech Recognition Assistant
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={toggleSpeechRecognition}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                          isListening
+                            ? 'bg-red-500 text-white animate-pulse'
+                            : 'bg-purple-600 text-white hover:bg-purple-700'
+                        }`}
+                      >
+                        {isListening ? (
+                          <>
+                            <MicOff className="w-3.5 h-3.5" />
+                            <span>Stop Listening</span>
+                          </>
+                        ) : (
+                          <>
+                            <Mic className="w-3.5 h-3.5" />
+                            <span>Start Dictation / Mic</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    {isListening && (
+                      <p className="text-[11px] text-red-600 font-medium animate-pulse">
+                        Listening to audio / microphone in real-time... Speak clearly into your mic.
+                      </p>
+                    )}
+                    {speechTranscript && (
+                      <div className="p-2.5 bg-white rounded-lg border border-purple-200 text-xs font-mono text-surface-800 max-h-24 overflow-y-auto">
+                        <span className="text-[10px] font-bold text-purple-600 uppercase block mb-1">Captured Live Text:</span>
+                        {speechTranscript}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Error Message */}
@@ -729,6 +917,81 @@ export function UniversalConverterPage() {
                 <CheckCircle2 className="w-5 h-5" />
                 <span>Conversion Finished Successfully</span>
               </div>
+
+              {/* Audio Transcript Result */}
+              {result.type === 'transcript' && (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-surface-700 uppercase tracking-wider">
+                        Speech Transcript & Timeline
+                      </span>
+                      {result.duration && (
+                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                          ⏱️ {result.duration}
+                        </span>
+                      )}
+                      {result.provider && (
+                        <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-surface-100 text-surface-600">
+                          {result.provider}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={copyTranscriptToClipboard}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-100 hover:bg-surface-200 rounded-lg text-xs font-semibold text-surface-700 transition-colors"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copied ? 'Copied!' : 'Copy Transcript'}
+                    </button>
+                  </div>
+
+                  {/* Audio Player */}
+                  {result.audioUrl && (
+                    <div className="p-3.5 bg-surface-50 rounded-2xl border border-surface-200 space-y-1.5">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-surface-700">
+                        <Volume2 className="w-4 h-4 text-purple-600" />
+                        <span>Synchronized Audio Playback</span>
+                      </div>
+                      <audio controls src={result.audioUrl} className="w-full h-10 rounded-lg" />
+                    </div>
+                  )}
+
+                  {/* Editable Transcript Text Area */}
+                  <div>
+                    <label className="block text-xs font-medium text-surface-500 mb-1">
+                      Verbatim Transcript (Editable)
+                    </label>
+                    <textarea
+                      rows={9}
+                      value={result.text || ''}
+                      onChange={(e) => setResult({ ...result, text: e.target.value })}
+                      className="w-full p-4 bg-surface-50 rounded-2xl border border-surface-200 text-surface-900 text-xs font-mono max-h-72 whitespace-pre-wrap leading-relaxed focus:ring-2 focus:ring-purple-400 focus:outline-none"
+                      placeholder="Transcript text will appear here..."
+                    />
+                  </div>
+
+                  {/* Download Action Bar */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-surface-50 rounded-2xl border border-surface-200">
+                    <div className="space-y-1">
+                      <p className="font-bold text-sm text-surface-900">{result.filename}</p>
+                      <p className="text-xs text-surface-500">
+                        Saved to MediaVault • Formatted transcript ready
+                      </p>
+                    </div>
+                    {result.downloadUrl && (
+                      <a
+                        href={result.downloadUrl}
+                        download={result.filename}
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md shadow-purple-600/20 transition-all cursor-pointer"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download Transcript ({targetFormat.toUpperCase()})
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* OCR Text Result */}
               {result.type === 'ocr' && (
