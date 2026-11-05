@@ -194,6 +194,7 @@ export async function handleUniversalConvert(req, res, next) {
       downloadUrl: savedFile ? `/api/files/${savedFile.id}/download` : null,
       previewUrl,
       transcript: resultMeta.transcript || null,
+      verbatim: resultMeta.verbatim || null,
       segments: resultMeta.segments || null,
       duration: resultMeta.duration || null,
       metadata: resultMeta
@@ -269,6 +270,7 @@ export async function handleAudioToText(req, res, next) {
       filename: outFilename,
       downloadUrl: savedFile ? `/api/files/${savedFile.id}/download` : null,
       transcript: resultMeta.transcript,
+      verbatim: resultMeta.verbatim || resultMeta.transcript,
       segments: resultMeta.segments,
       duration: resultMeta.duration,
       provider: resultMeta.provider,

@@ -135,6 +135,7 @@ export function UniversalConverterPage() {
   const [includeTimestamps, setIncludeTimestamps] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [speechTranscript, setSpeechTranscript] = useState('');
+  const [transcriptViewMode, setTranscriptViewMode] = useState('verbatim');
   const recognitionRef = useRef(null);
 
   // Processing state
@@ -253,8 +254,10 @@ export function UniversalConverterPage() {
         setProgressStatus('Transcription Complete!');
         setResult({
           type: 'transcript',
-          text: response.data.transcript,
-          segments: response.data.segments,
+          text: response.data.verbatim || response.data.transcript,
+          verbatim: response.data.verbatim || response.data.transcript,
+          fullReport: response.data.transcript,
+          segments: response.data.segments || [],
           duration: response.data.duration,
           provider: response.data.provider,
           downloadUrl: response.data.downloadUrl,
@@ -401,7 +404,12 @@ export function UniversalConverterPage() {
   };
 
   const copyTranscriptToClipboard = () => {
-    const textToCopy = result?.text || result?.transcript;
+    let textToCopy = result?.text || result?.verbatim || result?.transcript;
+    if (transcriptViewMode === 'timeline' && result?.segments?.length > 0) {
+      textToCopy = result.segments.map(s => `[${s.startTime || '00:00:00'} - ${s.endTime || '00:00:05'}] ${s.text || ''}`).join('\n');
+    } else if (transcriptViewMode === 'report') {
+      textToCopy = result?.fullReport || result?.transcript || result?.text;
+    }
     if (textToCopy) {
       navigator.clipboard.writeText(textToCopy);
       setCopied(true);
@@ -957,19 +965,83 @@ export function UniversalConverterPage() {
                     </div>
                   )}
 
-                  {/* Editable Transcript Text Area */}
-                  <div>
-                    <label className="block text-xs font-medium text-surface-500 mb-1">
-                      Verbatim Transcript (Editable)
-                    </label>
-                    <textarea
-                      rows={9}
-                      value={result.text || ''}
-                      onChange={(e) => setResult({ ...result, text: e.target.value })}
-                      className="w-full p-4 bg-surface-50 rounded-2xl border border-surface-200 text-surface-900 text-xs font-mono max-h-72 whitespace-pre-wrap leading-relaxed focus:ring-2 focus:ring-purple-400 focus:outline-none"
-                      placeholder="Transcript text will appear here..."
-                    />
+                  {/* View Mode Tabs */}
+                  <div className="flex items-center gap-1.5 p-1 bg-surface-100 rounded-xl w-fit">
+                    <button
+                      type="button"
+                      onClick={() => setTranscriptViewMode('verbatim')}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                        transcriptViewMode === 'verbatim'
+                          ? 'bg-white text-purple-700 shadow-sm'
+                          : 'text-surface-600 hover:text-surface-900'
+                      }`}
+                    >
+                      Verbatim Words
+                    </button>
+                    {result.segments && result.segments.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setTranscriptViewMode('timeline')}
+                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                          transcriptViewMode === 'timeline'
+                            ? 'bg-white text-purple-700 shadow-sm'
+                            : 'text-surface-600 hover:text-surface-900'
+                        }`}
+                      >
+                        Timestamps ({result.segments.length})
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setTranscriptViewMode('report')}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                        transcriptViewMode === 'report'
+                          ? 'bg-white text-purple-700 shadow-sm'
+                          : 'text-surface-600 hover:text-surface-900'
+                      }`}
+                    >
+                      Full Report
+                    </button>
                   </div>
+
+                  {/* Mode 1: Verbatim Text Editor */}
+                  {transcriptViewMode === 'verbatim' && (
+                    <div>
+                      <label className="block text-xs font-medium text-surface-500 mb-1">
+                        Spoken Dialogue & Words (Editable)
+                      </label>
+                      <textarea
+                        rows={8}
+                        value={result.text || ''}
+                        onChange={(e) => setResult({ ...result, text: e.target.value })}
+                        className="w-full p-4 bg-surface-50 rounded-2xl border border-surface-200 text-surface-900 text-xs font-mono max-h-72 whitespace-pre-wrap leading-relaxed focus:ring-2 focus:ring-purple-400 focus:outline-none"
+                        placeholder="Transcript text will appear here..."
+                      />
+                    </div>
+                  )}
+
+                  {/* Mode 2: Timestamped Speech Intervals */}
+                  {transcriptViewMode === 'timeline' && (
+                    <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                      {result.segments?.map((seg, idx) => (
+                        <div key={idx} className="p-3 bg-surface-50 rounded-xl border border-surface-200 text-xs flex items-start gap-2.5">
+                          <span className="font-mono font-bold text-purple-700 px-2 py-0.5 bg-purple-50 rounded-md whitespace-nowrap">
+                            {seg.startTime || `00:00:${String(Math.floor(seg.start || 0)).padStart(2, '0')}`} - {seg.endTime || `00:00:${String(Math.floor(seg.end || 0)).padStart(2, '0')}`}
+                          </span>
+                          <span className="text-surface-800 font-medium leading-relaxed">
+                            {seg.text}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Mode 3: Full Technical Report */}
+                  {transcriptViewMode === 'report' && (
+                    <pre className="p-4 bg-surface-50 rounded-2xl border border-surface-200 text-surface-900 text-xs font-mono max-h-72 overflow-y-auto whitespace-pre-wrap leading-relaxed">
+                      {result.fullReport || result.text}
+                    </pre>
+                  )}
 
                   {/* Download Action Bar */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-surface-50 rounded-2xl border border-surface-200">

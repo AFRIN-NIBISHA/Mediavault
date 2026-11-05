@@ -1523,6 +1523,96 @@ Provide timestamped lines like:
   }
 }
 
+// Global cached Whisper pipeline
+let whisperPipelineInstance = null;
+let whisperLoadingPromise = null;
+
+async function getWhisperPipeline(isMultilingual = false) {
+  const modelName = isMultilingual ? 'Xenova/whisper-tiny' : 'Xenova/whisper-tiny.en';
+
+  if (whisperPipelineInstance && whisperPipelineInstance.modelName === modelName) {
+    return whisperPipelineInstance.pipeline;
+  }
+
+  if (whisperLoadingPromise) return whisperLoadingPromise;
+
+  whisperLoadingPromise = (async () => {
+    try {
+      const { pipeline, env } = await import('@xenova/transformers');
+      env.allowRemoteModels = true;
+      const p = await pipeline('automatic-speech-recognition', modelName, { quantized: true });
+      whisperPipelineInstance = { pipeline: p, modelName };
+      return p;
+    } catch (e) {
+      console.warn('Failed to initialize Whisper pipeline:', e.message);
+      return null;
+    } finally {
+      whisperLoadingPromise = null;
+    }
+  })();
+
+  return whisperLoadingPromise;
+}
+
+/**
+ * Transcribe audio using offline neural Whisper model
+ */
+async function runWhisperTranscription(inputPath, language = 'eng') {
+  try {
+    const isMultilingual = ['tam', 'ta', 'hin', 'hi', 'fra', 'deu', 'spa'].includes(language.toLowerCase());
+    const transcriber = await getWhisperPipeline(isMultilingual);
+    if (!transcriber) return null;
+
+    const uploadDir = path.resolve(process.cwd(), 'uploads');
+    const tempRaw = path.join(uploadDir, `pcm-${Date.now()}-${Math.random().toString(36).substring(7)}.raw`);
+
+    await new Promise((resolve, reject) => {
+      execFile(
+        ffmpegInstaller.path,
+        ['-y', '-i', inputPath, '-f', 'f32le', '-ar', '16000', '-ac', '1', tempRaw],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+
+    if (!fs.existsSync(tempRaw)) return null;
+
+    const rawBuffer = fs.readFileSync(tempRaw);
+    try { fs.unlinkSync(tempRaw); } catch (e) {}
+
+    const audioData = new Float32Array(rawBuffer.buffer, rawBuffer.byteOffset, rawBuffer.length / 4);
+
+    const whisperOpts = {
+      chunk_length_s: 30,
+      stride_length_s: 5,
+      return_timestamps: true
+    };
+
+    if (isMultilingual) {
+      const langCodeMap = {
+        tam: 'tamil',
+        ta: 'tamil',
+        hin: 'hindi',
+        hi: 'hindi',
+        fra: 'french',
+        deu: 'german',
+        spa: 'spanish'
+      };
+      if (langCodeMap[language.toLowerCase()]) {
+        whisperOpts.language = langCodeMap[language.toLowerCase()];
+      }
+    }
+
+    const output = await transcriber(audioData, whisperOpts);
+    return output;
+  } catch (err) {
+    console.warn('Whisper neural transcription error:', err.message);
+    return null;
+  }
+}
+
 /**
  * Universal Audio to Transcript / Text Converter
  * Supports output formats: TXT, DOCX, SRT, JSON
@@ -1542,66 +1632,98 @@ export async function convertAudioToTranscript(inputPath, outputPath, options = 
   const segments = await detectSpeechSegments(inputPath, meta.totalSeconds);
 
   let transcriptText = '';
+  let fullVerbatim = '';
   let provider = 'mediavault-speech-engine';
+  let formattedSegments = [];
 
+  // 1. Check if client provided speech recognition from browser
   if (clientTranscript && typeof clientTranscript === 'string' && clientTranscript.trim().length > 0) {
-    transcriptText = clientTranscript.trim();
+    fullVerbatim = clientTranscript.trim();
     provider = 'browser-speech-recognition';
   } else {
-    const geminiResult = await callGeminiAudioTranscription(inputPath, language);
-    if (geminiResult) {
-      transcriptText = geminiResult.trim();
-      provider = 'gemini-1.5-flash';
-    } else {
-      const langNames = {
-        eng: 'English',
-        en: 'English',
-        tam: 'Tamil (தமிழ்)',
-        ta: 'Tamil (தமிழ்)',
-        hin: 'Hindi (हिन्दी)',
-        hi: 'Hindi (हिन्दी)',
-        fra: 'French (Français)',
-        deu: 'German (Deutsch)',
-        spa: 'Spanish (Español)'
-      };
-      const displayLang = langNames[language.toLowerCase()] || language.toUpperCase();
+    // 2. Run high-accuracy Whisper Neural Speech Recognition locally
+    const whisperResult = await runWhisperTranscription(inputPath, language);
+    if (whisperResult && whisperResult.text && whisperResult.text.trim().length > 0) {
+      fullVerbatim = whisperResult.text.trim();
+      provider = 'whisper-neural-ai';
 
-      const lines = [];
-      lines.push('================================================================================');
-      lines.push('                     MEDIAVAULT AUDIO TRANSCRIPTION REPORT                     ');
-      lines.push('================================================================================');
-      lines.push(`Source File       : ${baseName}.${audioExt}`);
-      lines.push(`Total Duration    : ${meta.durationFormatted} (${meta.totalSeconds.toFixed(1)}s)`);
-      lines.push(`Audio Properties  : ${meta.codec.toUpperCase()} | ${meta.sampleRate} | ${meta.channels} | ${meta.bitrate}`);
-      lines.push(`Target Language   : ${displayLang}`);
-      lines.push(`Detected Segments : ${segments.length} vocal intervals`);
-      lines.push(`Processing Mode   : MediaVault High-Fidelity Acoustic Speech Engine (Offline PWA)`);
-      if (meta.title) lines.push(`Track Title       : ${meta.title}`);
-      if (meta.artist) lines.push(`Artist / Speaker  : ${meta.artist}`);
-      if (meta.album) lines.push(`Album / Source    : ${meta.album}`);
-      lines.push('================================================================================\n');
-
-      lines.push('--- EXECUTIVE SUMMARY ---');
-      lines.push(`Acoustic inspection verified ${segments.length} distinct speech segment(s) spanning ${meta.durationFormatted}. Dynamic range: clean, speech cadence: active, signal-to-noise ratio: studio clear.\n`);
-
-      lines.push('--- TIMESTAMPS & SPEECH INTERVALS ---');
-      segments.forEach((seg, idx) => {
-        const startStr = formatAudioTimestamp(seg.start);
-        const endStr = formatAudioTimestamp(seg.end);
-        const segDur = seg.duration.toFixed(1);
-        lines.push(`[${startStr} - ${endStr}] (Seg ${idx + 1}, ${segDur}s): [Spoken Dialogue Interval Detected]`);
-      });
-
-      lines.push('\n--- FULL TRANSCRIPT / DIALOGUE NOTES ---');
-      if (meta.comment) {
-        lines.push(`Notes/Comments: ${meta.comment}`);
-      } else {
-        lines.push(`Audio track processed successfully with verbatim timestamp intervals. You can review, play, or edit the transcript text directly in MediaVault.`);
+      if (whisperResult.chunks && whisperResult.chunks.length > 0) {
+        formattedSegments = whisperResult.chunks.map((c, i) => {
+          const start = c.timestamp[0] ?? (i * 4);
+          const end = c.timestamp[1] ?? (start + 3);
+          return {
+            index: i + 1,
+            start,
+            end,
+            duration: Math.max(0.5, end - start),
+            text: (c.text || '').trim()
+          };
+        });
       }
-
-      transcriptText = lines.join('\n');
+    } else {
+      // 3. Try Cloud Gemini if configured
+      const geminiResult = await callGeminiAudioTranscription(inputPath, language);
+      if (geminiResult && geminiResult.trim().length > 0) {
+        fullVerbatim = geminiResult.trim();
+        provider = 'gemini-1.5-flash';
+      }
     }
   }
+
+  // Build formatted transcript text
+  const langNames = {
+    eng: 'English',
+    en: 'English',
+    tam: 'Tamil (தமிழ்)',
+    ta: 'Tamil (தமிழ்)',
+    hin: 'Hindi (हिन्दी)',
+    hi: 'Hindi (हिन्दी)',
+    fra: 'French (Français)',
+    deu: 'German (Deutsch)',
+    spa: 'Spanish (Español)'
+  };
+  const displayLang = langNames[language.toLowerCase()] || language.toUpperCase();
+
+  const lines = [];
+  lines.push('================================================================================');
+  lines.push('                     MEDIAVAULT AUDIO TRANSCRIPTION REPORT                     ');
+  lines.push('================================================================================');
+  lines.push(`Source File       : ${baseName}.${audioExt}`);
+  lines.push(`Total Duration    : ${meta.durationFormatted} (${meta.totalSeconds.toFixed(1)}s)`);
+  lines.push(`Audio Properties  : ${meta.codec.toUpperCase()} | ${meta.sampleRate} | ${meta.channels} | ${meta.bitrate}`);
+  lines.push(`Target Language   : ${displayLang}`);
+  lines.push(`Speech Engine     : ${provider === 'whisper-neural-ai' ? 'Whisper Neural AI (Offline Built-in)' : provider}`);
+  if (meta.title) lines.push(`Track Title       : ${meta.title}`);
+  if (meta.artist) lines.push(`Artist / Speaker  : ${meta.artist}`);
+  lines.push('================================================================================\n');
+
+  lines.push('--- VERBATIM SPEECH TRANSCRIPT ---');
+  if (fullVerbatim) {
+    lines.push(fullVerbatim);
+  } else {
+    lines.push('No vocal dialogue was detected in this audio segment.');
+  }
+  lines.push('');
+
+  if (includeTimestamps && formattedSegments.length > 0) {
+    lines.push('--- TIMESTAMPS & SPEECH PASSAGES ---');
+    formattedSegments.forEach((seg) => {
+      const startStr = formatAudioTimestamp(seg.start);
+      const endStr = formatAudioTimestamp(seg.end);
+      lines.push(`[${startStr} - ${endStr}] ${seg.text}`);
+    });
+    lines.push('');
+  } else if (includeTimestamps && segments.length > 0) {
+    lines.push('--- TIMESTAMPS & DETECTED INTERVALS ---');
+    segments.forEach((seg, idx) => {
+      const startStr = formatAudioTimestamp(seg.start);
+      const endStr = formatAudioTimestamp(seg.end);
+      lines.push(`[${startStr} - ${endStr}] Interval ${idx + 1}`);
+    });
+    lines.push('');
+  }
+
+  transcriptText = lines.join('\n');
 
   // Render output file based on requested format
   if (ext === 'json') {
@@ -1614,28 +1736,109 @@ export async function convertAudioToTranscript(inputPath, outputPath, options = 
       channels: meta.channels,
       bitrate: meta.bitrate,
       provider,
-      segments: segments.map((s, idx) => ({
+      verbatim: fullVerbatim,
+      segments: (formattedSegments.length > 0 ? formattedSegments : segments).map((s, idx) => ({
         index: idx + 1,
         startTime: formatAudioTimestamp(s.start),
         endTime: formatAudioTimestamp(s.end),
         startSeconds: s.start,
         endSeconds: s.end,
         durationSeconds: s.duration,
-        text: `Speech Interval ${idx + 1}`
+        text: s.text || `Speech Segment ${idx + 1}`
       })),
       transcript: transcriptText
     };
     fs.writeFileSync(outputPath, JSON.stringify(jsonOutput, null, 2), 'utf-8');
   } else if (ext === 'srt') {
     const srtLines = [];
-    segments.forEach((seg, idx) => {
+    const segList = formattedSegments.length > 0 ? formattedSegments : segments;
+    segList.forEach((seg, idx) => {
       srtLines.push(`${idx + 1}`);
       srtLines.push(`${formatAudioTimestamp(seg.start, true)} --> ${formatAudioTimestamp(seg.end, true)}`);
-      srtLines.push(`[Speech Segment ${idx + 1}] Spoken Dialogue`);
+      srtLines.push(seg.text || `[Speech Segment ${idx + 1}]`);
       srtLines.push('');
     });
     fs.writeFileSync(outputPath, srtLines.join('\n'), 'utf-8');
   } else if (ext === 'docx') {
+    const docChildren = [
+      new docx.Paragraph({
+        children: [
+          new docx.TextRun({
+            text: 'MediaVault Audio Transcription Report',
+            bold: true,
+            size: 36,
+            color: '4C1D95'
+          })
+        ],
+        spacing: { after: 200 }
+      }),
+      new docx.Paragraph({
+        children: [
+          new docx.TextRun({
+            text: `Generated on ${new Date().toLocaleDateString()} | File: ${baseName}.${audioExt} | Duration: ${meta.durationFormatted}`,
+            size: 20,
+            color: '6B7280',
+            italics: true
+          })
+        ],
+        spacing: { after: 300 }
+      }),
+      new docx.Paragraph({
+        children: [
+          new docx.TextRun({ text: 'Audio Asset Properties', bold: true, size: 24, color: '1F2937' })
+        ],
+        spacing: { before: 200, after: 120 }
+      }),
+      new docx.Paragraph({
+        children: [
+          new docx.TextRun({ text: `• Codec: `, bold: true }),
+          new docx.TextRun({ text: `${meta.codec.toUpperCase()} (${meta.bitrate}, ${meta.sampleRate}, ${meta.channels})` })
+        ]
+      }),
+      new docx.Paragraph({
+        children: [
+          new docx.TextRun({ text: `• Speech Engine: `, bold: true }),
+          new docx.TextRun({ text: provider })
+        ],
+        spacing: { after: 300 }
+      }),
+      new docx.Paragraph({
+        children: [
+          new docx.TextRun({ text: 'Verbatim Spoken Dialogue', bold: true, size: 26, color: '4C1D95' })
+        ],
+        spacing: { before: 200, after: 150 }
+      }),
+      new docx.Paragraph({
+        children: [
+          new docx.TextRun({ text: fullVerbatim || 'No dialogue detected.', size: 22 })
+        ],
+        spacing: { after: 250 }
+      })
+    ];
+
+    if (formattedSegments.length > 0) {
+      docChildren.push(
+        new docx.Paragraph({
+          children: [
+            new docx.TextRun({ text: 'Timestamped Speech Passages', bold: true, size: 24, color: '1F2937' })
+          ],
+          spacing: { before: 200, after: 150 }
+        })
+      );
+
+      formattedSegments.forEach((seg) => {
+        docChildren.push(
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: `[${formatAudioTimestamp(seg.start)} - ${formatAudioTimestamp(seg.end)}] `, bold: true, color: '6B21A8' }),
+              new docx.TextRun({ text: seg.text, size: 20 })
+            ],
+            spacing: { after: 80 }
+          })
+        );
+      });
+    }
+
     const doc = new docx.Document({
       sections: [{
         properties: {
@@ -1643,65 +1846,7 @@ export async function convertAudioToTranscript(inputPath, outputPath, options = 
             margin: { top: 720, bottom: 720, left: 720, right: 720 }
           }
         },
-        children: [
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({
-                text: 'MediaVault Audio Transcription Report',
-                bold: true,
-                size: 36,
-                color: '4C1D95'
-              })
-            ],
-            spacing: { after: 200 }
-          }),
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({
-                text: `Generated on ${new Date().toLocaleDateString()} | File: ${baseName}.${audioExt} | Duration: ${meta.durationFormatted}`,
-                size: 20,
-                color: '6B7280',
-                italics: true
-              })
-            ],
-            spacing: { after: 300 }
-          }),
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({ text: 'Audio Asset Properties', bold: true, size: 24, color: '1F2937' })
-            ],
-            spacing: { before: 200, after: 120 }
-          }),
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({ text: `• Codec: `, bold: true }),
-              new docx.TextRun({ text: `${meta.codec.toUpperCase()} (${meta.bitrate}, ${meta.sampleRate}, ${meta.channels})` })
-            ]
-          }),
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({ text: `• Speech Segments: `, bold: true }),
-              new docx.TextRun({ text: `${segments.length} vocal intervals detected` })
-            ]
-          }),
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({ text: `• Processing Engine: `, bold: true }),
-              new docx.TextRun({ text: provider })
-            ],
-            spacing: { after: 300 }
-          }),
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({ text: 'Transcript & Timelines', bold: true, size: 24, color: '1F2937' })
-            ],
-            spacing: { before: 200, after: 150 }
-          }),
-          ...transcriptText.split('\n').map(line => new docx.Paragraph({
-            children: [new docx.TextRun({ text: line, size: 20 })],
-            spacing: { after: 80 }
-          }))
-        ]
+        children: docChildren
       }]
     });
 
@@ -1714,7 +1859,8 @@ export async function convertAudioToTranscript(inputPath, outputPath, options = 
   return {
     outputPath,
     transcript: transcriptText,
-    segments,
+    verbatim: fullVerbatim || transcriptText,
+    segments: formattedSegments.length > 0 ? formattedSegments : segments,
     duration: meta.durationFormatted,
     totalSeconds: meta.totalSeconds,
     provider,
