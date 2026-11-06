@@ -5,6 +5,7 @@ import mime from 'mime-types';
 import { query } from '../database/db.js';
 import { calculateSha256, calculatePerceptualHash } from '../services/hashService.js';
 import { getImageMetadata } from '../services/imageService.js';
+import { recalculateUserStorage } from '../services/storageService.js';
 import { getFileCategory } from './constants.js';
 
 /**
@@ -81,6 +82,13 @@ export async function saveBufferAsMediaVaultFile(userId, buffer, originalName, o
      VALUES ($1, 'create', 'file', $2, $3)`,
     [userId, file.id, JSON.stringify({ filename: safeOriginalName, size: fileSize, category, summary: safeSummary })]
   );
+
+  // Recalculate storage breakdown so storage_usage is always live
+  try {
+    await recalculateUserStorage(userId);
+  } catch (err) {
+    console.warn('Failed to recalculate storage in saveBufferAsMediaVaultFile:', err.message);
+  }
 
   return {
     ...file,

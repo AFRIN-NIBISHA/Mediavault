@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import api from '../../services/api';
 import {
   LayoutDashboard,
   FolderLock,
@@ -31,13 +32,59 @@ import { useTheme } from '../../context/ThemeContext';
 import { formatBytes } from '../../utils/formatters';
 
 export function Sidebar({ isOpen, onClose }) {
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, logout, refreshUser } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
-  const totalUsed = user?.storage?.total || 0;
-  const storageLimit = user?.profile?.storageLimit || 10737418240;
-  const percentage = Math.min(100, Math.round((totalUsed / storageLimit) * 100));
+  const [storageData, setStorageData] = useState({
+    totalUsed: user?.storage?.total || 0,
+    storageLimit: user?.profile?.storageLimit || 53687091200,
+    percentage: 0
+  });
+
+  const fetchStorage = async () => {
+    try {
+      const res = await api.get('/dashboard/stats');
+      if (res.data?.success && res.data?.stats) {
+        const used = res.data.stats.storageUsed || 0;
+        const limit = res.data.stats.storageLimit || 53687091200;
+        const pct = res.data.stats.usagePercentage !== undefined
+          ? res.data.stats.usagePercentage
+          : Math.min(100, Math.round((used / limit) * 100));
+        setStorageData({
+          totalUsed: used,
+          storageLimit: limit,
+          percentage: pct
+        });
+      }
+    } catch (err) {
+      if (user?.storage?.total !== undefined) {
+        const used = user.storage.total || 0;
+        const limit = user.profile?.storageLimit || 53687091200;
+        setStorageData({
+          totalUsed: used,
+          storageLimit: limit,
+          percentage: Math.min(100, Math.round((used / limit) * 100))
+        });
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchStorage();
+    const handleUpdate = () => {
+      fetchStorage();
+      if (refreshUser) refreshUser();
+    };
+    window.addEventListener('files-uploaded', handleUpdate);
+    window.addEventListener('file-deleted', handleUpdate);
+    window.addEventListener('storage-updated', handleUpdate);
+    return () => {
+      window.removeEventListener('files-uploaded', handleUpdate);
+      window.removeEventListener('file-deleted', handleUpdate);
+      window.removeEventListener('storage-updated', handleUpdate);
+    };
+  }, [user?.id]);
 
   const navItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
@@ -233,18 +280,18 @@ export function Sidebar({ isOpen, onClose }) {
             <span className="flex items-center gap-1.5">
               <HardDrive className="w-3.5 h-3.5 text-brand-500" /> Storage
             </span>
-            <span>{percentage}%</span>
+            <span className="font-bold">{storageData.percentage}%</span>
           </div>
           <div className="w-full bg-surface-200 dark:bg-surface-700 rounded-full h-2 overflow-hidden mb-1.5">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                percentage > 90 ? 'bg-rose-500' : percentage > 75 ? 'bg-amber-500' : 'bg-brand-500'
+                storageData.percentage > 90 ? 'bg-rose-500' : storageData.percentage > 75 ? 'bg-amber-500' : 'bg-brand-500'
               }`}
-              style={{ width: `${percentage}%` }}
+              style={{ width: `${storageData.totalUsed > 0 ? Math.max(2, storageData.percentage) : 0}%` }}
             />
           </div>
           <p className="text-[11px] text-surface-500 dark:text-surface-400">
-            {formatBytes(totalUsed)} of {formatBytes(storageLimit)} used
+            {formatBytes(storageData.totalUsed)} of {formatBytes(storageData.storageLimit)} used
           </p>
         </div>
 

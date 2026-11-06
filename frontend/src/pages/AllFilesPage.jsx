@@ -157,6 +157,7 @@ export function AllFilesPage() {
         addToast(res.data.message, 'success');
         setSelectedFileIds([]);
         loadData();
+        window.dispatchEvent(new CustomEvent('files-uploaded'));
       }
     } catch (err) {
       addToast('Failed to delete files', 'error');
@@ -168,6 +169,7 @@ export function AllFilesPage() {
       await api.post('/files/delete', { fileIds: [file.id], permanent: false });
       addToast('Moved to Recycle Bin', 'success');
       loadData();
+      window.dispatchEvent(new CustomEvent('files-uploaded'));
     } catch (err) {
       addToast('Failed to delete file', 'error');
     }

@@ -189,6 +189,7 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
 
       // If output is generated, offer to use it as the next active attachment
       if (res.data.file) {
+        window.dispatchEvent(new CustomEvent('files-uploaded'));
         setAttachedFile({
           type: 'vault',
           fileId: res.data.file.id,

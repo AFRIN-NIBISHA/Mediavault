@@ -383,6 +383,7 @@ export function UniversalConverterPage() {
           metadata: response.data.metadata
         });
       }
+      window.dispatchEvent(new CustomEvent('files-uploaded'));
     } catch (err) {
       clearInterval(timer);
       console.warn('Backend conversion failed, attempting in-browser offline converter:', err);

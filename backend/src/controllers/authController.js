@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { query } from '../database/db.js';
-import { logActivity } from '../services/storageService.js';
+import { logActivity, recalculateUserStorage } from '../services/storageService.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mediavault_super_secure_jwt_secret_key_2026_dev_prod';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -135,7 +135,7 @@ export async function login(req, res) {
         fullName: user.full_name || user.username,
         avatarUrl: user.avatar_url,
         bio: user.bio,
-        storageLimit: user.storage_limit_bytes,
+        storageLimit: user.storage_limit_bytes || 53687091200,
         themePreference: user.theme_preference || 'light'
       }
     });
@@ -147,6 +147,9 @@ export async function login(req, res) {
 
 export async function getMe(req, res) {
   try {
+    // Recalculate up to date storage usage
+    const liveStorage = await recalculateUserStorage(req.user.id);
+
     const userRes = await query(
       `SELECT u.id, u.email, u.username, u.role, u.is_active, u.created_at,
               p.full_name, p.avatar_url, p.bio, p.storage_limit_bytes, p.theme_preference, p.auto_empty_trash_days,
@@ -175,19 +178,19 @@ export async function getMe(req, res) {
           fullName: row.full_name,
           avatarUrl: row.avatar_url,
           bio: row.bio,
-          storageLimit: row.storage_limit_bytes,
+          storageLimit: row.storage_limit_bytes || 53687091200,
           themePreference: row.theme_preference,
           autoEmptyTrashDays: row.auto_empty_trash_days
         },
         storage: {
-          total: row.total_bytes || 0,
-          photos: row.photos_bytes || 0,
-          videos: row.videos_bytes || 0,
-          documents: row.documents_bytes || 0,
-          pdfs: row.pdfs_bytes || 0,
-          archives: row.archives_bytes || 0,
-          audio: row.audio_bytes || 0,
-          other: row.other_bytes || 0
+          total: liveStorage?.total ?? (row.total_bytes || 0),
+          photos: liveStorage?.photos ?? (row.photos_bytes || 0),
+          videos: liveStorage?.videos ?? (row.videos_bytes || 0),
+          documents: liveStorage?.documents ?? (row.documents_bytes || 0),
+          pdfs: liveStorage?.pdfs ?? (row.pdfs_bytes || 0),
+          archives: liveStorage?.archives ?? (row.archives_bytes || 0),
+          audio: liveStorage?.audio ?? (row.audio_bytes || 0),
+          other: liveStorage?.other ?? (row.other_bytes || 0)
         }
       }
     });
