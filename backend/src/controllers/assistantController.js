@@ -129,107 +129,127 @@ export async function handleAssistantChat(req, res, next) {
       });
     }
 
-    // CASE 1: No file attached OR user explicitly asking to create/ready a new document like ChatGPT
-    if ((!inputPath || !fs.existsSync(inputPath)) || docGenService.isDocCreationRequest(message)) {
-      if (docGenService.isDocCreationRequest(message)) {
-        // Generate new document (PDF, Word DOCX, Excel XLSX, PPT Presentation)
-        const genResult = await docGenService.generateDocumentFromPrompt({
-          prompt: message,
-          language: lang,
-          user: req.user,
-          uploadsDir: uploadDir
-        });
+    // Check if file is attached
+    const hasAttachedFile = !!(inputPath && fs.existsSync(inputPath));
+    const parsed = hasAttachedFile
+      ? assistantService.parseIntent(message, { ext, originalName })
+      : { intent: 'general_chat' };
 
-        // Persist newly generated document into user's MediaVault files
-        const outputBuffer = fs.readFileSync(genResult.outputPath);
-        const safeSummary = `AI Copilot: ${genResult.operationTitle}`.substring(0, 240);
-        const savedFile = await saveBufferAsMediaVaultFile(
-          userId,
-          outputBuffer,
-          genResult.outFilename,
-          { summary: safeSummary }
-        );
+    // CASE 1: File is attached AND user requested an action/conversion on it
+    if (hasAttachedFile && parsed.intent !== 'general_chat') {
+      const actionResult = await assistantService.executeAssistantAction(parsed, inputPath, originalName, uploadDir);
 
-        let reply = '';
-        const isPres = genResult.outExt === 'pptx' || genResult.category === 'presentation';
-        const themeLabel = genResult.themeName || (genResult.isLightTheme ? 'Silicon Valley Light' : 'Cyber Obsidian Dark');
+      // Persist result into MediaVault files table
+      const outputBuffer = fs.readFileSync(actionResult.outputPath);
+      const safeSummary = `AI Assistant: ${actionResult.operationTitle}`.substring(0, 240);
+      const savedFile = await saveBufferAsMediaVaultFile(
+        userId,
+        outputBuffer,
+        actionResult.outFilename,
+        { summary: safeSummary }
+      );
 
-        if (lang === 'tanglish') {
-          if (isPres) {
-            reply = `Kandippa! Neenga ketta "${genResult.topic}" ${genResult.slideCount || 12}-slide premium ${themeLabel} presentation-ah PowerPoint (${genResult.outExt.toUpperCase()}) format-la successfully ready panni mudichiten! Different elegant templates: Hero Cover, 2-Column Split, 3 Strategic Pillars, 4-Quadrant Tech Stack, Big KPI Metrics & Strategic Roadmap ellam executive visual cards & typography-oda structured-ah iruku. Keela irunthu download pannikonga! 📽️✨`;
-          } else {
-            reply = `Kandippa! Neenga ketta "${genResult.topic}" document-ah ${genResult.outExt.toUpperCase()} format-la successfully generate panni mudichiten! Professional formatting, tables & structured layout ellamae serthu iruku. Keela irunthu direct-ah preview pathutu download pannikonga! 👍📄✨`;
-          }
-        } else if (lang === 'tamil') {
-          if (isPres) {
-            reply = `நிச்சயமாக! நீங்கள் கேட்ட "${genResult.topic}" ${genResult.slideCount || 12}-ஸ்லைடு பிரீமியம் ${themeLabel} பிரசன்டேஷனை பவர்பாயிண்ட் (${genResult.outExt.toUpperCase()}) வடிவில் வெற்றிகரமாகத் தயார் செய்துவிட்டேன்! இதில் கவர் ஸ்லைடு, ஒப்பீட்டு அட்டவணை, முக்கிய தூண்கள், 4-அடுக்கு கட்டமைப்பு, KPI எண்கள் மற்றும் திட்ட வரைபடம் ஆகிய நேர்த்தியான டெம்ப்ளேட்டுகள் சேர்க்கப்பட்டுள்ளன. கீழே உள்ள கார்டிலிருந்து பதிவிறக்கிக் கொள்ளலாம்! 📽️✨`;
-          } else {
-            reply = `நிச்சயமாக! நீங்கள் கேட்ட "${genResult.topic}" ஆவணத்தை ${genResult.outExt.toUpperCase()} வடிவத்தில் வெற்றிகரமாகத் தயார் செய்துவிட்டேன்! இதில் முறையான தலைப்புகள், கட்டமைப்புகள் மற்றும் அட்டவணைகள் சேர்க்கப்பட்டுள்ளன. கீழே உள்ள கார்டிலிருந்து பதிவிறக்கிக் கொள்ளலாம்! 📄✨`;
-          }
-        } else {
-          if (isPres) {
-            reply = `I've successfully created your ${genResult.slideCount || 12}-slide premium ${themeLabel} presentation for "${genResult.topic}" in ${genResult.outExt.toUpperCase()} format! It features diverse executive templates: Hero Cover, 2-Column Comparison, 3 Strategic Pillars, 4-Quadrant Tech Stack, Big KPI Metrics, and Strategic Roadmap. You can download and present it right below! 📽️✨`;
-          } else {
-            reply = `I've successfully created your requested ${genResult.topic} in ${genResult.outExt.toUpperCase()} format! It has been styled with professional structure, typography, and clean formatting. You can preview and download it right below! 📄✨`;
-          }
-        }
+      // Build intelligent conversational reply
+      const replyText = assistantService.buildAssistantResponse(parsed, actionResult);
 
-        return res.json({
-          success: true,
-          reply,
-          operation: genResult.operationTitle,
-          file: savedFile,
-          downloadUrl: `/api/files/${savedFile.id}/download`,
-          previewUrl: `/api/files/${savedFile.id}/preview`,
-          outFilename: genResult.outFilename,
-          outExt: genResult.outExt,
-          size: genResult.size,
-          metadata: genResult
-        });
-      }
+      // Generate base64 preview for images and stickers
+      const isImageLike = ['webp', 'png', 'jpg', 'jpeg', 'gif'].includes(actionResult.outExt);
+      const previewUrl = isImageLike
+        ? `data:image/${actionResult.outExt === 'jpg' ? 'jpeg' : actionResult.outExt};base64,${outputBuffer.toString('base64')}`
+        : `/api/files/${savedFile.id}/download`;
 
-      // General ChatGPT conversational response
+      return res.json({
+        success: true,
+        reply: replyText,
+        operation: actionResult.operationTitle,
+        file: savedFile,
+        downloadUrl: `/api/files/${savedFile.id}/download`,
+        previewUrl,
+        outFilename: actionResult.outFilename,
+        outExt: actionResult.outExt,
+        size: actionResult.size,
+        metadata: actionResult.metadata
+      });
+    }
+
+    // CASE 2: User explicitly asking to create/ready a new document like ChatGPT from scratch
+    if (docGenService.isDocCreationRequest(message)) {
+      const genResult = await docGenService.generateDocumentFromPrompt({
+        prompt: message,
+        language: lang,
+        user: req.user,
+        uploadsDir: uploadDir
+      });
+
+      // Persist newly generated document into user's MediaVault files
+      const outputBuffer = fs.readFileSync(genResult.outputPath);
+      const safeSummary = `AI Copilot: ${genResult.operationTitle}`.substring(0, 240);
+      const savedFile = await saveBufferAsMediaVaultFile(
+        userId,
+        outputBuffer,
+        genResult.outFilename,
+        { summary: safeSummary }
+      );
+
       let reply = '';
+      const isPres = genResult.outExt === 'pptx' || genResult.category === 'presentation';
+      const themeLabel = genResult.themeName || (genResult.isLightTheme ? 'Silicon Valley Light' : 'Cyber Obsidian Dark');
+
       if (lang === 'tanglish') {
-        reply = `Vanakkam! Naan ungaloda MediaVault AI Copilot. ChatGPT mathiri enakku documents (PDF, Word DOCX, Excel XLSX, PPT Slides) ready panna mudiyum, athoda unga files-ah edit & convert panna mudiyum!\n\n**Neenga en kitta direct-ah kekalam:**\n• *"Resume ready panni tha PDF-la"*\n• *"Cloud computing pathi project report Word-la create pannu"*\n• *"Monthly budget tracker Excel sheet ready panni kudu"*\n• *"AI technology pathi 5 slides presentation ready pannu"*\n• *"Freelance web development invoice ready pannu"*\n\nAthoda unga file-ah attach panni: *"Background remove pannu"*, *"Transparent sticker ah mathu"*, *"Last 2 pages remove pannu"* nu sonnalum seiven! Enna document ready pannanum nu sollunga! 🚀📄✨`;
+        if (isPres) {
+          reply = `Kandippa! Neenga ketta "${genResult.topic}" ${genResult.slideCount || 12}-slide premium ${themeLabel} presentation-ah PowerPoint (${genResult.outExt.toUpperCase()}) format-la successfully ready panni mudichiten! Different elegant templates: Hero Cover, 2-Column Split, 3 Strategic Pillars, 4-Quadrant Tech Stack, Big KPI Metrics & Strategic Roadmap ellam executive visual cards & typography-oda structured-ah iruku. Keela irunthu download pannikonga! 📽️✨`;
+        } else {
+          reply = `Kandippa! Neenga ketta "${genResult.topic}" document-ah ${genResult.outExt.toUpperCase()} format-la successfully generate panni mudichiten! Professional formatting, tables & structured layout ellamae serthu iruku. Keela irunthu direct-ah preview pathutu download pannikonga! 👍📄✨`;
+        }
       } else if (lang === 'tamil') {
-        reply = `வணக்கம்! நான் உங்கள் மீடியாவால்ட் ஏஐ உதவியாளர் (MediaVault AI Copilot). ChatGPT போல நான் புதிய ஆவணங்களை (PDF, Word DOCX, Excel XLSX, PPT) உருவாக்கவும், பழைய கோப்புகளைத் திருத்தவும் செய்வேன்!\n\n**நீங்கள் என்னிடம் கேட்கலாம்:**\n• *"சாப்ட்வேர் இன்ஜினியர் ரெஸ்யூம் PDF-ல் தயார் செய்து தா"*\n• *"ப்ராஜெக்ட் அறிக்கை வேர்ட் (DOCX) கோப்பாக உருவாக்கு"*\n• *"மாதாந்திர வரவு-செலவு எக்செல் ஷீட் தயார் செய்"*\n• *"செயற்கை நுண்ணறிவு பற்றி பிரசன்டேஷன் ஸ்லைடுகள் உருவாக்கு"*\n\nஉங்களுக்கு என்ன ஆவணம் வேண்டும் என்று கூறுங்கள், உடனடியாகச் செய்து தருகிறேன்! 🚀📄✨`;
+        if (isPres) {
+          reply = `நிச்சயமாக! நீங்கள் கேட்ட "${genResult.topic}" ${genResult.slideCount || 12}-ஸ்லைடு பிரீமியம் ${themeLabel} பிரசன்டேஷனை பவர்பாயிண்ட் (${genResult.outExt.toUpperCase()}) வடிவில் வெற்றிகரமாகத் தயார் செய்துவிட்டேன்! இதில் கவர் ஸ்லைடு, ஒப்பீட்டு அட்டவணை, முக்கிய தூண்கள், 4-அடுக்கு கட்டமைப்பு, KPI எண்கள் மற்றும் திட்ட வரைபடம் ஆகிய நேர்த்தியான டெம்ப்ளேட்டுகள் சேர்க்கப்பட்டுள்ளன. கீழே உள்ள கார்டிலிருந்து பதிவிறக்கிக் கொள்ளலாம்! 📽️✨`;
+        } else {
+          reply = `நிச்சயமாக! நீங்கள் கேட்ட "${genResult.topic}" ஆவணத்தை ${genResult.outExt.toUpperCase()} வடிவத்தில் வெற்றிகரமாகத் தயார் செய்துவிட்டேன்! இதில் முறையான தலைப்புகள், கட்டமைப்புகள் மற்றும் அட்டவணைகள் சேர்க்கப்பட்டுள்ளன. கீழே உள்ள கார்டிலிருந்து பதிவிறக்கிக் கொள்ளலாம்! 📄✨`;
+        }
       } else {
-        reply = `Hello! I am your MediaVault AI Copilot. Just like ChatGPT, I can create complete documents (PDF, Word DOCX, Excel XLSX, PPT Slides) from scratch, as well as edit and convert your existing media!\n\n**You can ask me to:**\n• *"Create a Full Stack Developer resume in PDF"*\n• *"Create a project report on Cloud Computing in Word (DOCX)"*\n• *"Create a monthly budget tracker in Excel (XLSX)"*\n• *"Create a 5-slide presentation on Artificial Intelligence"*\n• *"Generate a freelance services invoice in PDF"*\n\nOr attach any file to remove backgrounds, create transparent stickers, or remove pages. What would you like me to create today? 🚀📄✨`;
+        if (isPres) {
+          reply = `I've successfully created your ${genResult.slideCount || 12}-slide premium ${themeLabel} presentation for "${genResult.topic}" in ${genResult.outExt.toUpperCase()} format! It features diverse executive templates: Hero Cover, 2-Column Comparison, 3 Strategic Pillars, 4-Quadrant Tech Stack, Big KPI Metrics, and Strategic Roadmap. You can download and present it right below! 📽️✨`;
+        } else {
+          reply = `I've successfully created your requested ${genResult.topic} in ${genResult.outExt.toUpperCase()} format! It has been styled with professional structure, typography, and clean formatting. You can preview and download it right below! 📄✨`;
+        }
       }
 
       return res.json({
         success: true,
         reply,
-        requiresFile: false,
-        language: lang
+        operation: genResult.operationTitle,
+        file: savedFile,
+        downloadUrl: `/api/files/${savedFile.id}/download`,
+        previewUrl: `/api/files/${savedFile.id}/download`,
+        outFilename: genResult.outFilename,
+        outExt: genResult.outExt,
+        size: genResult.size,
+        metadata: genResult
       });
     }
 
-    // CASE 2: File is attached -> Parse intent & Execute
-    const parsed = assistantService.parseIntent(message, { ext, originalName });
-
-    if (parsed.intent === 'general_chat') {
+    // CASE 3: File is attached but user command was conversational / not recognized
+    if (hasAttachedFile) {
       let reply = '';
       if (lang === 'tanglish') {
-        reply = `Unga file "${originalName}" attach aagi iruku! Ithula enna panna vendum?
-• Transparent Sticker aaka "Sticker ah mathu" nu sollunga
-• Background remove panna "Background remove pannu" nu sollunga
-• Format convert panna "To PDF" / "To Word" nu sollunga
-• Colors adjust panna "Brightness ethu" / "Black & White mathu" nu sollunga`;
+        reply = `Unga file "${originalName}" attach aagi iruku! Ithula Universal Converter-la iruka ellam conversions-um panna mudiyum:
+• Format conversion: "To PDF", "To Word", "To Excel", "To CSV", "To MP3", "To GIF"
+• Video & Audio: "Video to GIF", "Extract audio (MP3)", "Audio to Transcript"
+• Smart tools: "Remove duplicates", "Reverse GIF", "Create ZIP", "Compress file"
+• Visual: "Transparent sticker", "Remove background", "Brightness / Grayscale"`;
       } else if (lang === 'tamil') {
-        reply = `உங்கள் கோப்பு "${originalName}" இணைக்கப்பட்டுள்ளது! இதில் என்ன மாற்றம் செய்ய வேண்டும்?
-• ஸ்டிக்கராக மாற்ற: "ஸ்டிக்கர் ஆக்கு"
-• பின்னணி நீக்க: "பின்னணி நீக்கு"
-• வடிவம் மாற்ற: "PDF ஆக மாற்று"
-• எடிட் செய்ய: "பிரைட்னஸ் கூட்டு"`;
+        reply = `உங்கள் கோப்பு "${originalName}" இணைக்கப்பட்டுள்ளது! இதில் அனைத்து வடிவ மாற்றங்களையும் செய்யலாம்:
+• கோப்பு மாற்றம்: "PDF ஆக மாற்று", "Word ஆக மாற்று", "Excel ஆக மாற்று", "MP3 ஆக மாற்று"
+• வீடியோ & ஆடியோ: "Video to GIF", "ஆடியோவை பிரி (MP3)", "டிரான்ஸ்கிரிப்ட் எடு"
+• சிறப்புக் கருவிகள்: "போலி வரிகளை நீக்கு", "Reverse GIF", "ZIP உருவாக்கு", "அளவைச் சுருக்கு"
+• புகைப்படங்கள்: "ஸ்டிக்கர் ஆக்கு", "பின்னணி நீக்கு"`;
       } else {
-        reply = `I have received your file "${originalName}". How would you like me to process it? You can ask me to:
-• "Make it a transparent sticker"
-• "Remove the background"
-• "Convert to PDF / Word / Excel"
-• "Increase brightness / contrast / grayscale"
-• "Compress file size"`;
+        reply = `I have received your file "${originalName}". All 11 Universal Converter studio tools are available:
+• Format Conversions: "Convert to PDF / Word / Excel / CSV / MP3 / GIF"
+• Media Studio: "Video to GIF", "Extract Audio to MP3", "Audio to Transcript"
+• Smart Utilities: "Remove Duplicate Rows", "Reverse GIF", "Create ZIP Archive", "Compress File"
+• Visual Studio: "Make Sticker", "Remove Background", "Adjust Brightness / Contrast"`;
       }
 
       return res.json({
@@ -241,39 +261,21 @@ export async function handleAssistantChat(req, res, next) {
       });
     }
 
-    // Execute requested edit / conversion
-    const actionResult = await assistantService.executeAssistantAction(parsed, inputPath, originalName, uploadDir);
+    // CASE 4: No file attached and conversational general chat
+    let reply = '';
+    if (lang === 'tanglish') {
+      reply = `Vanakkam! Naan ungaloda MediaVault AI Copilot. ChatGPT mathiri enakku documents (PDF, Word DOCX, Excel XLSX, PPT Slides) ready panna mudiyum, athoda Universal Converter-oda 11 studios conversions-um panna mudiyum!\n\n**Neenga en kitta direct-ah kekalam:**\n• *"Resume ready panni tha PDF-la"*\n• *"Cloud computing pathi project report Word-la create pannu"*\n• *"Monthly budget tracker Excel sheet ready panni kudu"*\n• *"AI technology pathi 12 slides presentation ready pannu"*\n\n**Athoda unga file-ah attach panni:**\n• *"Word to PDF"*, *"PDF to Excel"*, *"Excel deduplicate pannu"*\n• *"Video to GIF"*, *"Extract audio to MP3"*, *"Reverse GIF"*\n• *"Audio-va transcript-ah mathu"*, *"Text to audio narration"*\n• *"Background remove pannu"*, *"Transparent sticker"*, *"Create ZIP"*\n\nEnna seiyanum nu sollunga! 🚀📄✨`;
+    } else if (lang === 'tamil') {
+      reply = `வணக்கம்! நான் உங்கள் மீடியாவால்ட் ஏஐ உதவியாளர் (MediaVault AI Copilot). ChatGPT போல நான் புதிய ஆவணங்களை உருவாக்கவும், அப்ளிகேஷனின் 11 ஸ்டுடியோ மாற்றங்களைச் செய்யவும் செய்வேன்!\n\n**நீங்கள் என்னிடம் கேட்கலாம்:**\n• *"சாப்ட்வேர் இன்ஜினியர் ரெஸ்யூம் PDF-ல் தயார் செய்து தா"*\n• *"ப்ராஜெக்ட் அறிக்கை வேர்ட் (DOCX) கோப்பாக உருவாக்கு"*\n• *"மாதாந்திர வரவு-செலவு எக்செல் ஷீட் தயார் செய்"*\n• *"12 ஸ்லைடுகள் பிரசன்டேஷன் உருவாக்கு"*\n\n**கோப்புகளை இணைத்து:**\n• *"PDF to Word", "Excel duplicate நீக்கு", "Video to GIF"*\n• *"ஆடியோவை பிரி (MP3)", "டிரான்ஸ்கிரிப்ட் எடு", "பின்னணி நீக்கு"*\n\nஉங்களுக்கு என்ன வேண்டும் என்று கூறுங்கள்! 🚀📄✨`;
+    } else {
+      reply = `Hello! I am your MediaVault AI Copilot. Just like ChatGPT, I can create complete documents (PDF, Word DOCX, Excel XLSX, PPT Slides) from scratch, as well as execute all 11 Universal Converter studio tools directly from chat!\n\n**You can ask me to:**\n• *"Create a Full Stack Developer resume in PDF"*\n• *"Create a project report in Word (DOCX)"*\n• *"Create a monthly budget tracker in Excel (XLSX)"*\n• *"Create a 12-slide presentation in PPT"*\n\n**Or attach any file to:**\n• Convert PDF to Word/Excel/HTML/Images\n• Convert Word to PDF/Excel/Audio\n• Clean duplicate rows in Excel\n• Convert Video to GIF or Extract Audio to MP3\n• Reverse GIF animation or create Stickers\n• Compress files or bundle into ZIP archives\n\nWhat would you like me to do today? 🚀📄✨`;
+    }
 
-    // Persist result into MediaVault files table
-    const outputBuffer = fs.readFileSync(actionResult.outputPath);
-    const safeSummary = `AI Assistant: ${actionResult.operationTitle}`.substring(0, 240);
-    const savedFile = await saveBufferAsMediaVaultFile(
-      userId,
-      outputBuffer,
-      actionResult.outFilename,
-      { summary: safeSummary }
-    );
-
-    // Build intelligent conversational reply
-    const replyText = assistantService.buildAssistantResponse(parsed, actionResult);
-
-    // Generate base64 preview for images and stickers
-    const isImageLike = ['webp', 'png', 'jpg', 'jpeg', 'gif'].includes(actionResult.outExt);
-    const previewUrl = isImageLike
-      ? `data:image/${actionResult.outExt === 'jpg' ? 'jpeg' : actionResult.outExt};base64,${outputBuffer.toString('base64')}`
-      : null;
-
-    res.json({
+    return res.json({
       success: true,
-      reply: replyText,
-      operation: actionResult.operationTitle,
-      file: savedFile,
-      downloadUrl: `/api/files/${savedFile.id}/download`,
-      previewUrl: previewUrl || `/api/files/${savedFile.id}/download`,
-      outFilename: actionResult.outFilename,
-      outExt: actionResult.outExt,
-      size: actionResult.size,
-      metadata: actionResult.metadata
+      reply,
+      requiresFile: false,
+      language: lang
     });
   } catch (err) {
     next(err);

@@ -25,7 +25,9 @@ import {
   Trash2,
   RefreshCw,
   Volume2,
-  Music
+  Music,
+  Film,
+  Archive
 } from 'lucide-react';
 import api from '../../services/api';
 import { formatBytes } from '../../utils/formatters';
@@ -33,16 +35,19 @@ import { convertImageOffline } from '../../utils/offlineConverter';
 
 const QUICK_ACTIONS = [
   { label: '🎙️ Txt to audio (MP3)', prompt: 'MediaVault digital asset management and universal converter. Txt to audio' },
-  { label: '📽️ 12 Slides Dark Theme (PPT)', prompt: 'MediaVault pathi 12 slides dark theme elegant presentation ready panni tha' },
-  { label: '✨ 12 Slides Light Theme (PPT)', prompt: 'MediaVault pathi 12 slides light theme premium presentation ready panni tha' },
-  { label: '🏛️ Corporate Navy Deck (PPT)', prompt: 'MediaVault pathi 12 slides corporate navy presentation ready panni kudu' },
+  { label: '🎬 Video to GIF', prompt: 'Video-va animated GIF-ah mathu' },
+  { label: '🎵 Extract Audio (MP3)', prompt: 'Extract audio from this video as MP3' },
+  { label: '🔄 Reverse GIF', prompt: 'Reverse this GIF boomerang animation' },
+  { label: '📊 Clean Excel Duplicates', prompt: 'Remove duplicate rows from Excel sheet' },
+  { label: '📦 Create ZIP Archive', prompt: 'Create compressed ZIP archive' },
+  { label: '📄 Word to PDF', prompt: 'Word to standardized PDF ah mathu' },
+  { label: '📑 PDF to Word (DOCX)', prompt: 'PDF to editable Word DOCX ah mathu' },
+  { label: '✨ Transparent Sticker', prompt: 'Itha WhatsApp Telegram standard transparent sticker ah mathi kudu' },
+  { label: '✂️ Background Remove', prompt: 'Background remove pannu, transparent PNG kudu' },
   { label: '📄 Resume Ready பண்ணு (PDF)', prompt: 'Full Stack Software Engineer resume ready panni tha PDF-la' },
   { label: '📝 Project Report (Word)', prompt: 'Cloud Computing pathi professional project report Word docx-la ready pannu' },
   { label: '📊 Budget Tracker (Excel)', prompt: 'Monthly budget and expense tracker Excel sheet ready panni kudu' },
-  { label: 'Transparent Sticker-ஆ மாத்து', prompt: 'Itha WhatsApp Telegram standard transparent sticker ah mathi kudu' },
-  { label: 'Background Remove பண்ணு', prompt: 'Background remove pannu, transparent PNG kudu' },
-  { label: 'Remove Last 2 Pages (PDF)', prompt: 'Ithula last iruka rendu certificate um remove panni tha' },
-  { label: 'PDF to Word (DOCX)', prompt: 'PDF to editable Word DOCX ah mathu' }
+  { label: '📽️ 12 Slides Dark Theme (PPT)', prompt: 'MediaVault pathi 12 slides dark theme elegant presentation ready panni tha' }
 ];
 
 export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
@@ -412,13 +417,26 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
                         </div>
 
                         {/* Visual Media Preview */}
-                        {m.outExt && ['webp', 'png', 'jpg', 'jpeg'].includes(m.outExt.toLowerCase()) ? (
+                        {m.outExt && ['webp', 'png', 'jpg', 'jpeg', 'gif'].includes(m.outExt.toLowerCase()) ? (
                           <div className="p-3 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:10px_10px] rounded-lg border border-surface-200 flex items-center justify-center min-h-[140px] max-h-[220px]">
                             <img
                               src={m.previewUrl}
                               alt="Output Preview"
                               className="max-h-[200px] max-w-full object-contain rounded-md drop-shadow-md"
                             />
+                          </div>
+                        ) : m.outExt && ['mp4', 'mov', 'webm'].includes(m.outExt.toLowerCase()) ? (
+                          <div className="p-3 bg-white rounded-lg border border-purple-200 space-y-2">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                                <Film className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-xs text-surface-900 truncate">{m.outFilename}</p>
+                                <p className="text-[10px] text-surface-500 uppercase">{m.outExt} Video Stream</p>
+                              </div>
+                            </div>
+                            <video controls src={m.previewUrl || m.downloadUrl} className="w-full max-h-56 rounded-lg bg-black" />
                           </div>
                         ) : m.outExt && ['mp3', 'wav', 'ogg', 'aac'].includes(m.outExt.toLowerCase()) ? (
                           <div className="p-3 bg-white rounded-lg border border-purple-200 space-y-2">
@@ -432,6 +450,22 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
                               </div>
                             </div>
                             <audio controls src={m.previewUrl || m.downloadUrl} className="w-full h-8 rounded" />
+                          </div>
+                        ) : m.outExt && ['zip', 'rar', 'tar', 'gz'].includes(m.outExt.toLowerCase()) ? (
+                          <div className="p-3 bg-white rounded-lg border border-amber-200 flex items-center gap-3">
+                            <Archive className="w-8 h-8 text-amber-600" />
+                            <div className="min-w-0">
+                              <p className="font-bold text-xs text-surface-900 truncate">{m.outFilename}</p>
+                              <p className="text-[10px] text-surface-500 uppercase">Compressed ZIP Archive</p>
+                            </div>
+                          </div>
+                        ) : m.outExt && ['xlsx', 'xls', 'csv'].includes(m.outExt.toLowerCase()) ? (
+                          <div className="p-3 bg-white rounded-lg border border-emerald-200 flex items-center gap-3">
+                            <FileSpreadsheet className="w-8 h-8 text-emerald-600" />
+                            <div className="min-w-0">
+                              <p className="font-bold text-xs text-surface-900 truncate">{m.outFilename}</p>
+                              <p className="text-[10px] text-surface-500 uppercase">{m.outExt} Spreadsheet</p>
+                            </div>
                           </div>
                         ) : (
                           <div className="p-3 bg-white rounded-lg border border-surface-200 flex items-center gap-3">

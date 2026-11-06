@@ -36,10 +36,14 @@ export function Sidebar({ isOpen, onClose }) {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
+  const initialUsed = user?.storage?.total || 0;
+  const initialLimit = user?.profile?.storageLimit || user?.storageLimit || 53687091200;
+  const initialRawPct = (initialUsed / initialLimit) * 100;
+
   const [storageData, setStorageData] = useState({
-    totalUsed: user?.storage?.total || 0,
-    storageLimit: user?.profile?.storageLimit || 53687091200,
-    percentage: 0
+    totalUsed: initialUsed,
+    storageLimit: initialLimit,
+    percentage: initialUsed > 0 && initialRawPct < 1 ? '<1' : Math.round(initialRawPct)
   });
 
   const fetchStorage = async () => {
@@ -48,9 +52,8 @@ export function Sidebar({ isOpen, onClose }) {
       if (res.data?.success && res.data?.stats) {
         const used = res.data.stats.storageUsed || 0;
         const limit = res.data.stats.storageLimit || 53687091200;
-        const pct = res.data.stats.usagePercentage !== undefined
-          ? res.data.stats.usagePercentage
-          : Math.min(100, Math.round((used / limit) * 100));
+        const rawPct = (used / limit) * 100;
+        const pct = used > 0 && rawPct < 1 ? '<1' : Math.round(rawPct);
         setStorageData({
           totalUsed: used,
           storageLimit: limit,
@@ -60,15 +63,29 @@ export function Sidebar({ isOpen, onClose }) {
     } catch (err) {
       if (user?.storage?.total !== undefined) {
         const used = user.storage.total || 0;
-        const limit = user.profile?.storageLimit || 53687091200;
+        const limit = user.profile?.storageLimit || user.storageLimit || 53687091200;
+        const rawPct = (used / limit) * 100;
         setStorageData({
           totalUsed: used,
           storageLimit: limit,
-          percentage: Math.min(100, Math.round((used / limit) * 100))
+          percentage: used > 0 && rawPct < 1 ? '<1' : Math.round(rawPct)
         });
       }
     }
   };
+
+  useEffect(() => {
+    if (user?.storage?.total !== undefined) {
+      const used = user.storage.total || 0;
+      const limit = user.profile?.storageLimit || user.storageLimit || 53687091200;
+      const rawPct = (used / limit) * 100;
+      setStorageData({
+        totalUsed: used,
+        storageLimit: limit,
+        percentage: used > 0 && rawPct < 1 ? '<1' : Math.round(rawPct)
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     fetchStorage();

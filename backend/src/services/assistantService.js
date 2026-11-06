@@ -99,8 +99,127 @@ export function parseIntent(message = '', fileMeta = {}) {
     lower.includes('munnala') ||
     lower.includes('முதல்');
 
-  // 1. PDF PAGE MANIPULATION (Remove/Extract last, first, or specific pages/certificates)
-  if (isPdf && (hasRemoveKeywords || hasPageKeywords || hasLastKeywords || hasFirstKeywords)) {
+  // 1. SMART UTILITIES & SPECIALIZED STUDIO INTENTS (Checked first to prevent format shadowing)
+
+  // A. COMPRESSION
+  if (
+    intent === 'general_chat' &&
+    (
+      lower.includes('compress') ||
+      lower.includes('size reduce') ||
+      lower.includes('size kora') ||
+      lower.includes('chinnatha mathu') ||
+      lower.includes('சுருக்கு')
+    )
+  ) {
+    intent = 'compress';
+  }
+  // B. WATERMARK
+  else if (intent === 'general_chat' && (lower.includes('watermark') || lower.includes('வாட்டர்மார்க்'))) {
+    intent = 'watermark';
+    const match = message.match(/["']([^"']+)["']/) || message.match(/watermark\s+([A-Za-z0-9_-]+)/i);
+    params.text = match ? match[1] : 'CONFIDENTIAL';
+  }
+  // C. OCR / TEXT EXTRACTION
+  else if (
+    intent === 'general_chat' &&
+    (
+      lower.includes('ocr') ||
+      lower.includes('extract text') ||
+      lower.includes('text extract') ||
+      lower.includes('eluthu edukalam') ||
+      lower.includes('read text') ||
+      lower.includes('எழுத்து')
+    )
+  ) {
+    intent = 'ocr';
+  }
+  // D. AUDIO TO TRANSCRIPT
+  else if (
+    intent === 'general_chat' &&
+    (
+      lower.includes('transcript') ||
+      lower.includes('audio to text') ||
+      lower.includes('speech to text') ||
+      lower.includes('transcribe') ||
+      lower.includes('audio-va text') ||
+      lower.includes('audio va text') ||
+      lower.includes('audio transcript') ||
+      lower.includes('டிரான்ஸ்கிரிப்ட்') ||
+      (['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'webm'].includes(ext) && (lower.includes('text') || lower.includes('transcript') || lower.includes('subtitles')))
+    )
+  ) {
+    intent = 'audio_to_transcript';
+    targetFormat = lower.includes('docx') ? 'docx' : (lower.includes('srt') ? 'srt' : (lower.includes('json') ? 'json' : 'txt'));
+  }
+  // E. EXCEL DEDUPLICATION
+  else if (
+    intent === 'general_chat' &&
+    (['xlsx', 'xls', 'csv'].includes(ext) || lower.includes('excel')) &&
+    (
+      lower.includes('dedup') ||
+      lower.includes('remove duplicate') ||
+      lower.includes('duplicate remove') ||
+      lower.includes('clean duplicate') ||
+      lower.includes('duplicate thooku') ||
+      lower.includes('போலி வரிகளை நீக்கு')
+    )
+  ) {
+    intent = 'excel_dedup';
+  }
+  // F. ARCHIVE (ZIP) CONVERSIONS
+  else if (
+    intent === 'general_chat' &&
+    (ext === 'zip' || lower.includes('unzip') || lower.includes('extract zip') || lower.includes('zip extract') || lower.includes('பிரித்தெடு'))
+  ) {
+    intent = 'extract_zip';
+    targetFormat = 'zip';
+  }
+  else if (
+    intent === 'general_chat' &&
+    (lower.includes('create zip') || lower.includes('make zip') || lower.includes('zip bundle') || lower.includes('zip panni') || lower.includes('to zip'))
+  ) {
+    intent = 'create_zip';
+    targetFormat = 'zip';
+  }
+  // G. REVERSE GIF
+  else if (
+    intent === 'general_chat' &&
+    (ext === 'gif' || lower.includes('gif')) &&
+    (lower.includes('reverse') || lower.includes('boomerang') || lower.includes('thirupu') || lower.includes('loop'))
+  ) {
+    intent = 'reverse_gif';
+    targetFormat = 'gif';
+  }
+  // H. STICKER INTENTS
+  else if (
+    intent === 'general_chat' &&
+    (lower.includes('sticker') || lower.includes('ஸ்டிக்கர்') || lower.includes('stiker'))
+  ) {
+    intent = 'sticker';
+    targetFormat = 'webp';
+  }
+  // I. BACKGROUND REMOVAL INTENTS
+  else if (
+    intent === 'general_chat' &&
+    (
+      lower.includes('background remove') ||
+      lower.includes('remove background') ||
+      lower.includes('remove bg') ||
+      lower.includes('bg remove') ||
+      lower.includes('erase background') ||
+      lower.includes('pinnani neekku') ||
+      lower.includes('bg thooku') ||
+      lower.includes('பின்னணி') ||
+      lower.includes('transparent aaku') ||
+      lower.includes('transparent mathu')
+    )
+  ) {
+    intent = 'remove_bg';
+    targetFormat = 'png';
+  }
+  // J. PDF PAGE MANIPULATION (Remove/Extract last, first, or specific pages/certificates)
+  else if (isPdf && (hasRemoveKeywords || hasPageKeywords || hasLastKeywords || hasFirstKeywords)) {
     if (hasRemoveKeywords && hasLastKeywords) {
       intent = 'pdf_pages';
       targetFormat = 'pdf';
@@ -133,82 +252,125 @@ export function parseIntent(message = '', fileMeta = {}) {
     }
   }
 
-  // 2. STICKER INTENTS
-  if (
-    intent === 'general_chat' &&
-    (lower.includes('sticker') || lower.includes('ஸ்டிக்கர்') || lower.includes('stiker'))
-  ) {
-    intent = 'sticker';
-    targetFormat = 'webp';
-  }
-  // 3. BACKGROUND REMOVAL INTENTS
+  // 2. VIDEO CONVERSIONS (Video to GIF, Extract Audio, Transcode)
   else if (
     intent === 'general_chat' &&
-    (
-      lower.includes('background remove') ||
-      lower.includes('remove background') ||
-      lower.includes('remove bg') ||
-      lower.includes('bg remove') ||
-      lower.includes('erase background') ||
-      lower.includes('pinnani neekku') ||
-      lower.includes('bg thooku') ||
-      lower.includes('பின்னணி') ||
-      lower.includes('transparent aaku') ||
-      lower.includes('transparent mathu')
-    )
+    (['mp4', 'mov', 'avi', 'webm', 'mkv'].includes(ext) || lower.includes('video')) &&
+    (lower.includes('to gif') || lower.includes('gif ah') || lower.includes('gif mathu') || lower.includes('clip to gif'))
   ) {
-    intent = 'remove_bg';
-    targetFormat = 'png';
+    intent = 'convert_format';
+    targetFormat = 'gif';
   }
-  // 4. DOCUMENT CONVERSIONS
-  // Word to PDF
   else if (
     intent === 'general_chat' &&
+    (['mp4', 'mov', 'avi', 'webm', 'mkv'].includes(ext) || lower.includes('video')) &&
     (
-      lower.includes('word to pdf') || lower.includes('docx to pdf') ||
-      (ext === 'docx' && (lower.includes('to pdf') || lower.includes('pdf ah') || lower.includes('pdf mathu'))) ||
-      (lower.includes('வேர்ட்') && lower.includes('பிடிஎஃப்'))
+      lower.includes('extract audio') ||
+      lower.includes('audio extract') ||
+      lower.includes('video to mp3') ||
+      lower.includes('video to audio') ||
+      lower.includes('mp3 ah mathu') ||
+      lower.includes('soundtrack') ||
+      lower.includes('bgm') ||
+      lower.includes('audio mattum') ||
+      lower.includes('ஆடியோவை பிரி')
     )
   ) {
     intent = 'convert_format';
-    targetFormat = 'pdf';
+    targetFormat = 'mp3';
   }
-  // PDF to Word
+  // GIF to Video
   else if (
     intent === 'general_chat' &&
-    (
-      lower.includes('pdf to word') || lower.includes('pdf to docx') ||
-      (ext === 'pdf' && (lower.includes('to word') || lower.includes('to docx') || lower.includes('word ah') || lower.includes('word docx'))) ||
-      lower.includes('editable word')
-    )
+    ext === 'gif' &&
+    (lower.includes('to video') || lower.includes('to mp4') || lower.includes('mp4 ah') || lower.includes('video ah'))
   ) {
     intent = 'convert_format';
-    targetFormat = 'docx';
+    targetFormat = 'mp4';
   }
-  // Excel to PDF / CSV / JSON
-  else if (intent === 'general_chat' && (lower.includes('excel') || ext === 'xlsx' || ext === 'xls')) {
-    if (lower.includes('csv')) {
+  // Word to PDF / HTML / TXT / Excel
+  else if (intent === 'general_chat' && (ext === 'docx' || ext === 'doc' || lower.includes('word to') || lower.includes('docx to'))) {
+    if (lower.includes('to html') || lower.includes('html ah')) {
+      intent = 'convert_format';
+      targetFormat = 'html';
+    } else if (lower.includes('to txt') || lower.includes('to text') || lower.includes('text ah')) {
+      intent = 'convert_format';
+      targetFormat = 'txt';
+    } else if (lower.includes('to excel') || lower.includes('to xlsx') || lower.includes('excel ah')) {
+      intent = 'convert_format';
+      targetFormat = 'xlsx';
+    } else if (lower.includes('to pdf') || lower.includes('pdf ah') || lower.includes('pdf mathu') || lower.includes('word to pdf')) {
+      intent = 'convert_format';
+      targetFormat = 'pdf';
+    }
+  }
+  // PDF to Word / Excel / TXT / HTML / Image
+  else if (intent === 'general_chat' && (ext === 'pdf' || lower.includes('pdf to'))) {
+    if (lower.includes('to word') || lower.includes('to docx') || lower.includes('word ah') || lower.includes('word docx') || lower.includes('editable word')) {
+      intent = 'convert_format';
+      targetFormat = 'docx';
+    } else if (lower.includes('to excel') || lower.includes('to xlsx') || lower.includes('excel ah') || lower.includes('to csv')) {
+      intent = 'convert_format';
+      targetFormat = 'xlsx';
+    } else if (lower.includes('to txt') || lower.includes('to text') || lower.includes('text ah')) {
+      intent = 'convert_format';
+      targetFormat = 'txt';
+    } else if (lower.includes('to html') || lower.includes('html ah')) {
+      intent = 'convert_format';
+      targetFormat = 'html';
+    } else if (lower.includes('to image') || lower.includes('to png') || lower.includes('png ah')) {
+      intent = 'convert_format';
+      targetFormat = 'png';
+    } else if (lower.includes('to jpg') || lower.includes('jpg ah')) {
+      intent = 'convert_format';
+      targetFormat = 'jpg';
+    }
+  }
+  // Excel to PDF / CSV / JSON / XML / HTML
+  else if (intent === 'general_chat' && (['xlsx', 'xls', 'csv'].includes(ext) || lower.includes('excel to'))) {
+    if (lower.includes('to csv') || lower.includes('csv ah')) {
       intent = 'convert_format';
       targetFormat = 'csv';
-    } else if (lower.includes('json')) {
+    } else if (lower.includes('to json') || lower.includes('json ah')) {
       intent = 'convert_format';
       targetFormat = 'json';
+    } else if (lower.includes('to xml') || lower.includes('xml ah')) {
+      intent = 'convert_format';
+      targetFormat = 'xml';
+    } else if (lower.includes('to html') || lower.includes('html ah') || lower.includes('web table')) {
+      intent = 'convert_format';
+      targetFormat = 'html';
+    } else if (lower.includes('to pdf') || lower.includes('pdf ah')) {
+      intent = 'convert_format';
+      targetFormat = 'pdf';
+    }
+  }
+  // PowerPoint to PDF / PNG / Image
+  else if (intent === 'general_chat' && (['pptx', 'ppt'].includes(ext) || lower.includes('powerpoint') || lower.includes('ppt to'))) {
+    if (lower.includes('to image') || lower.includes('to png') || lower.includes('png ah') || lower.includes('slides to image')) {
+      intent = 'convert_format';
+      targetFormat = 'png';
     } else {
       intent = 'convert_format';
       targetFormat = 'pdf';
     }
   }
-  // PPT to PDF
-  else if (intent === 'general_chat' && (lower.includes('powerpoint') || lower.includes('ppt') || ext === 'pptx')) {
-    intent = 'convert_format';
-    targetFormat = 'pdf';
+  // Audio to MP3 / WAV
+  else if (intent === 'general_chat' && ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'webm'].includes(ext)) {
+    if (lower.includes('to wav') || lower.includes('wav ah') || lower.includes('studio wav')) {
+      intent = 'convert_format';
+      targetFormat = 'wav';
+    } else if (lower.includes('to mp3') || lower.includes('mp3 ah')) {
+      intent = 'convert_format';
+      targetFormat = 'mp3';
+    }
   }
   // Generic to PDF
   else if (intent === 'general_chat' && (lower.includes('to pdf') || lower.includes('pdf ah mathu') || lower.includes('pdf mathi'))) {
     intent = 'convert_format';
     targetFormat = 'pdf';
   }
-  // To PNG / JPG / WebP
+  // To PNG / JPG / WebP / AVIF
   else if (intent === 'general_chat' && (lower.includes('to png') || lower.includes('png ah'))) {
     intent = 'convert_format';
     targetFormat = 'png';
@@ -218,28 +380,11 @@ export function parseIntent(message = '', fileMeta = {}) {
   } else if (intent === 'general_chat' && (lower.includes('to webp') || lower.includes('webp ah'))) {
     intent = 'convert_format';
     targetFormat = 'webp';
+  } else if (intent === 'general_chat' && (lower.includes('to avif') || lower.includes('avif ah'))) {
+    intent = 'convert_format';
+    targetFormat = 'avif';
   }
-  // Audio to Transcript / Text
-  else if (
-    intent === 'general_chat' &&
-    (
-      lower.includes('transcript') ||
-      lower.includes('audio to text') ||
-      lower.includes('speech to text') ||
-      lower.includes('transcribe') ||
-      lower.includes('audio-va text') ||
-      lower.includes('audio va text') ||
-      lower.includes('audio transcript') ||
-      lower.includes('text ah mathu') ||
-      lower.includes('text-ah mathu') ||
-      lower.includes('டிரான்ஸ்கிரிப்ட்') ||
-      (['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'webm'].includes(ext) && (lower.includes('text') || lower.includes('transcript') || lower.includes('subtitles')))
-    )
-  ) {
-    intent = 'audio_to_transcript';
-    targetFormat = lower.includes('docx') ? 'docx' : (lower.includes('srt') ? 'srt' : (lower.includes('json') ? 'json' : 'txt'));
-  }
-  // 5. IMAGE ADJUSTMENTS
+  // 3. IMAGE ADJUSTMENTS
   // Brightness
   else if (
     intent === 'general_chat' &&
@@ -290,39 +435,6 @@ export function parseIntent(message = '', fileMeta = {}) {
     if (lower.includes('180')) params.angle = 180;
     else if (lower.includes('270')) params.angle = 270;
     else params.angle = 90;
-  }
-  // 6. COMPRESSION
-  else if (
-    intent === 'general_chat' &&
-    (
-      lower.includes('compress') ||
-      lower.includes('size reduce') ||
-      lower.includes('size kora') ||
-      lower.includes('chinnatha mathu') ||
-      lower.includes('சுருக்கு')
-    )
-  ) {
-    intent = 'compress';
-  }
-  // 7. WATERMARK
-  else if (intent === 'general_chat' && (lower.includes('watermark') || lower.includes('வாட்டர்மார்க்'))) {
-    intent = 'watermark';
-    const match = message.match(/["']([^"']+)["']/) || message.match(/watermark\s+([A-Za-z0-9_-]+)/i);
-    params.text = match ? match[1] : 'CONFIDENTIAL';
-  }
-  // 8. OCR / TEXT EXTRACTION
-  else if (
-    intent === 'general_chat' &&
-    (
-      lower.includes('ocr') ||
-      lower.includes('extract text') ||
-      lower.includes('text extract') ||
-      lower.includes('eluthu edukalam') ||
-      lower.includes('read text') ||
-      lower.includes('எழுத்து')
-    )
-  ) {
-    intent = 'ocr';
   }
 
   return { intent, targetFormat, params, language: lang, originalText: message };
@@ -404,25 +516,136 @@ export async function executeAssistantAction(parsed, inputPath, originalName, up
   }
   // 4. FORMAT CONVERSIONS
   else if (intent === 'convert_format') {
-    operationTitle = `Convert to ${targetFormat.toUpperCase()}`;
-    outputPath = path.join(uploadsDir, `assistant-${timestamp}-${cleanBase}.${targetFormat}`);
+    const normTarget = targetFormat.toLowerCase();
+    operationTitle = `Convert to ${normTarget.toUpperCase()}`;
+    outputPath = path.join(uploadsDir, `assistant-${timestamp}-${cleanBase}.${normTarget}`);
 
-    if (ext === 'docx' || ext === 'doc') {
-      resultMeta = await conversionService.convertWordDocument(inputPath, targetFormat, outputPath);
-    } else if (ext === 'pdf') {
-      resultMeta = await conversionService.convertPdf(inputPath, targetFormat, outputPath);
-    } else if (['xlsx', 'xls', 'csv'].includes(ext)) {
-      resultMeta = await conversionService.convertSpreadsheet(inputPath, targetFormat, outputPath);
-    } else if (['pptx', 'ppt'].includes(ext)) {
-      resultMeta = await conversionService.convertPowerPoint(inputPath, targetFormat, outputPath);
-    } else if (['jpg', 'jpeg', 'png', 'webp', 'avif', 'tiff', 'bmp'].includes(ext)) {
-      resultMeta = await conversionService.convertImage(inputPath, targetFormat, outputPath);
+    // PDF source conversions
+    if (ext === 'pdf') {
+      if (normTarget === 'docx' || normTarget === 'doc') {
+        resultMeta = await conversionService.convertPdfToWord(inputPath, outputPath);
+      } else if (normTarget === 'xlsx' || normTarget === 'csv') {
+        resultMeta = await conversionService.convertPdfToExcel(inputPath, outputPath);
+      } else if (normTarget === 'txt') {
+        resultMeta = await conversionService.convertPdfToTxt(inputPath, outputPath);
+      } else if (normTarget === 'html') {
+        resultMeta = await conversionService.convertPdfToHtml(inputPath, outputPath);
+      } else if (['jpg', 'jpeg', 'png', 'webp', 'avif'].includes(normTarget)) {
+        resultMeta = await conversionService.convertImage(inputPath, normTarget, outputPath);
+      } else {
+        throw new Error(`Unsupported conversion from PDF to ${normTarget}`);
+      }
+    }
+    // Word source conversions
+    else if (ext === 'docx' || ext === 'doc') {
+      if (normTarget === 'pdf') {
+        resultMeta = await conversionService.convertWordToPdf(inputPath, outputPath);
+      } else if (normTarget === 'html') {
+        resultMeta = await conversionService.convertWordToHtml(inputPath, outputPath);
+      } else if (normTarget === 'txt') {
+        resultMeta = await conversionService.convertWordToTxt(inputPath, outputPath);
+      } else if (normTarget === 'xlsx') {
+        resultMeta = await conversionService.convertWordToExcel(inputPath, outputPath);
+      } else if (normTarget === 'mp3' || normTarget === 'wav') {
+        resultMeta = await conversionService.convertTextToAudio(inputPath, outputPath);
+      } else {
+        throw new Error(`Unsupported conversion from Word to ${normTarget}`);
+      }
+    }
+    // Excel source conversions
+    else if (['xlsx', 'xls', 'csv'].includes(ext)) {
+      resultMeta = await conversionService.convertExcel(inputPath, normTarget, outputPath);
+    }
+    // PowerPoint source conversions
+    else if (['pptx', 'ppt'].includes(ext)) {
+      resultMeta = await conversionService.convertPowerPoint(inputPath, normTarget, outputPath);
+    }
+    // Image source conversions
+    else if (['jpg', 'jpeg', 'png', 'webp', 'avif', 'tiff', 'bmp'].includes(ext)) {
+      resultMeta = await conversionService.convertImage(inputPath, normTarget, outputPath);
+    }
+    // GIF source conversions
+    else if (ext === 'gif') {
+      if (normTarget === 'mp4') {
+        resultMeta = await conversionService.convertGifToVideo(inputPath, outputPath);
+      } else if (normTarget === 'webp') {
+        resultMeta = await conversionService.convertGifToSticker(inputPath, outputPath);
+      } else {
+        resultMeta = await conversionService.convertImage(inputPath, normTarget, outputPath);
+      }
+    }
+    // Video source conversions (Video to GIF, Extract Audio, Transcode)
+    else if (['mp4', 'mov', 'avi', 'webm', 'mkv'].includes(ext)) {
+      if (normTarget === 'gif') {
+        operationTitle = 'Video to GIF Animated Clip';
+        resultMeta = await conversionService.convertVideoToGif(inputPath, outputPath);
+      } else if (normTarget === 'mp3' || normTarget === 'wav') {
+        operationTitle = 'Extract Audio Track (MP3)';
+        resultMeta = await conversionService.extractAudioFromVideo(inputPath, outputPath);
+      } else {
+        resultMeta = await conversionService.convertVideo(inputPath, outputPath);
+      }
+    }
+    // Audio source conversions
+    else if (['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'webm'].includes(ext)) {
+      if (['txt', 'docx', 'srt', 'json'].includes(normTarget)) {
+        operationTitle = `Audio to Transcript (${normTarget.toUpperCase()})`;
+        resultMeta = await conversionService.convertAudioToTranscript(inputPath, outputPath, { targetFormat: normTarget });
+      } else {
+        resultMeta = await conversionService.convertAudio(inputPath, outputPath, { format: normTarget });
+      }
+    }
+    // Text to Audio / Speech
+    else if (['txt', 'text'].includes(ext)) {
+      if (normTarget === 'mp3' || normTarget === 'wav') {
+        operationTitle = 'Text to Spoken Audio';
+        resultMeta = await conversionService.convertTextToAudio(inputPath, outputPath);
+      } else {
+        resultMeta = await conversionService.convertWordToPdf(inputPath, outputPath);
+      }
     } else {
       throw new Error(`Cannot convert from .${ext} to .${targetFormat}`);
     }
-    tempOutExt = targetFormat;
+    tempOutExt = normTarget;
   }
-  // 4b. AUDIO TO TRANSCRIPT
+  // 4b. REVERSE GIF
+  else if (intent === 'reverse_gif') {
+    operationTitle = 'Reverse GIF Animation';
+    outputPath = path.join(uploadsDir, `assistant-${timestamp}-${cleanBase}-reverse.gif`);
+    resultMeta = await conversionService.reverseGif(inputPath, outputPath);
+    tempOutExt = 'gif';
+  }
+  // 4c. EXCEL DEDUPLICATION
+  else if (intent === 'excel_dedup') {
+    operationTitle = 'Excel Duplicate Rows Removal';
+    outputPath = path.join(uploadsDir, `assistant-${timestamp}-${cleanBase}-deduped.xlsx`);
+    resultMeta = await conversionService.deduplicateExcel(inputPath, outputPath);
+    tempOutExt = 'xlsx';
+  }
+  // 4d. CREATE ZIP ARCHIVE
+  else if (intent === 'create_zip') {
+    operationTitle = 'Create Compressed ZIP Archive';
+    outputPath = path.join(uploadsDir, `assistant-${timestamp}-${cleanBase}.zip`);
+    resultMeta = await conversionService.createArchive([inputPath], outputPath, 'zip');
+    tempOutExt = 'zip';
+  }
+  // 4e. EXTRACT ZIP ARCHIVE
+  else if (intent === 'extract_zip') {
+    operationTitle = 'Extract ZIP Archive';
+    const extractDir = path.join(uploadsDir, `assistant-unzip-${timestamp}`);
+    const resUnzip = await conversionService.extractArchive(inputPath, extractDir);
+    resultMeta = resUnzip;
+    if (resUnzip.extractedFiles && resUnzip.extractedFiles.length > 0) {
+      const firstFile = resUnzip.extractedFiles[0];
+      outputPath = path.join(extractDir, firstFile.filename);
+      tempOutExt = path.extname(firstFile.filename).replace('.', '').toLowerCase() || 'bin';
+    } else {
+      outputPath = path.join(uploadsDir, `assistant-${timestamp}-${cleanBase}-extracted.txt`);
+      fs.writeFileSync(outputPath, `Extracted 0 files from ${originalName}`);
+      tempOutExt = 'txt';
+    }
+  }
+  // 4f. AUDIO TO TRANSCRIPT
   else if (intent === 'audio_to_transcript') {
     operationTitle = `Audio to Transcript (${targetFormat.toUpperCase()})`;
     outputPath = path.join(uploadsDir, `assistant-${timestamp}-${cleanBase}.${targetFormat}`);
@@ -487,32 +710,48 @@ export async function executeAssistantAction(parsed, inputPath, originalName, up
     outputPath = path.join(uploadsDir, `assistant-${timestamp}-${cleanBase}-compressed.${ext}`);
 
     if (ext === 'pdf') {
-      resultMeta = await conversionService.compressPdf(inputPath, outputPath, 0.65);
+      resultMeta = await conversionService.compressPdf(inputPath, outputPath);
     } else if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
-      resultMeta = await conversionService.compressImage(inputPath, outputPath, 75);
+      resultMeta = await conversionService.convertImage(inputPath, ext, outputPath, { quality: 70 });
+    } else if (['mp4', 'mov', 'webm'].includes(ext)) {
+      resultMeta = await conversionService.convertVideo(inputPath, outputPath, { crf: 28 });
+    } else if (['mp3', 'wav', 'ogg'].includes(ext)) {
+      resultMeta = await conversionService.convertAudio(inputPath, outputPath, { bitrate: '128k' });
     } else {
-      resultMeta = await conversionService.compressFile(inputPath, outputPath);
+      resultMeta = await conversionService.createArchive([inputPath], outputPath, 'zip');
+      tempOutExt = 'zip';
     }
-    tempOutExt = ext;
   }
   // 7. OCR
   else if (intent === 'ocr') {
     operationTitle = 'Optical Character Recognition (OCR)';
     const ocr = await conversionService.runOcr(inputPath, 'eng');
     outputPath = path.join(uploadsDir, `assistant-${timestamp}-${cleanBase}-ocr.txt`);
-    fs.writeFileSync(outputPath, ocr.text, 'utf8');
+    fs.writeFileSync(outputPath, ocr.text || 'No legible text detected.', 'utf8');
     resultMeta = { text: ocr.text, confidence: ocr.confidence, lines: ocr.lines };
     tempOutExt = 'txt';
   }
   // 8. WATERMARK
   else if (intent === 'watermark') {
-    operationTitle = `Add Watermark "${params.text || 'CONFIDENTIAL'}"`;
+    const wmText = params.text || 'CONFIDENTIAL';
+    operationTitle = `Add Watermark "${wmText}"`;
     outputPath = path.join(uploadsDir, `assistant-${timestamp}-${cleanBase}-watermarked.${ext}`);
 
     if (ext === 'pdf') {
-      resultMeta = await conversionService.addWatermarkToPdf(inputPath, outputPath, params.text || 'CONFIDENTIAL');
+      resultMeta = await conversionService.watermarkPdf(inputPath, outputPath, wmText);
+    } else if (['jpg', 'jpeg', 'png', 'webp', 'avif'].includes(ext)) {
+      const imgMeta = await sharp(inputPath).metadata();
+      const w = imgMeta.width || 800;
+      const h = imgMeta.height || 600;
+      const fontSize = Math.max(22, Math.round(w / 18));
+      const svg = `<svg width="${w}" height="${h}">
+        <style>.wm { fill: rgba(255, 255, 255, 0.45); font-size: ${fontSize}px; font-weight: bold; font-family: sans-serif; stroke: rgba(0,0,0,0.3); stroke-width: 1.5px; }</style>
+        <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" transform="rotate(-30, ${w / 2}, ${h / 2})" class="wm">${wmText}</text>
+      </svg>`;
+      await sharp(inputPath).composite([{ input: Buffer.from(svg), top: 0, left: 0 }]).toFile(outputPath);
+      resultMeta = { watermark: wmText, width: w, height: h };
     } else {
-      resultMeta = await conversionService.watermarkImage(inputPath, outputPath, params.text || 'CONFIDENTIAL');
+      resultMeta = await conversionService.watermarkPdf(inputPath, outputPath, wmText);
     }
     tempOutExt = ext;
   } else {
@@ -556,6 +795,14 @@ export function buildAssistantResponse(parsed, actionResult) {
       return `Unga image-la background-ah clean-ah remove panniten! Transparent PNG ready-ah iruku. Keela irunthu direct-ah download pannikalam! ✂️✨`;
     } else if (intent === 'convert_format') {
       return `Super! Unga document-ah ${actionResult.outExt.toUpperCase()}-ah convert panni mudichiten. Formatting & alignment ellamae neat-ah maintain aagi iruku. Check out the preview! 📄✨`;
+    } else if (intent === 'reverse_gif') {
+      return `Super! Unga GIF-ah successfully reverse panniten! Boomerang reverse playback ready-ah iruku. Keela check out pannikalam! 🎬🔄✨`;
+    } else if (intent === 'excel_dedup') {
+      return `Done! Excel sheet-la iruntha duplicate rows-ah successfully clean panniten (${actionResult.metadata?.duplicatesRemoved || 0} duplicate rows removed). Clean spreadsheet ready! 📊✨`;
+    } else if (intent === 'create_zip') {
+      return `Super! Unga file-ah compressed ZIP archive-la bundle panniten! Safe & compact storage-ku download pannikonga! 📦✨`;
+    } else if (intent === 'extract_zip') {
+      return `ZIP archive-la iruntha contents-ah successfully unpack & extract panni mudichiten! Keela irunthu files access pannikalam! 📦📂✨`;
     } else if (intent === 'audio_to_transcript') {
       return `Super! Unga audio file-ah analyze panni transcript (${actionResult.outExt.toUpperCase()}) create panniten! Spoken intervals & timestamps ellamae neat-ah extract aagi iruku. Keela check out pannikalam! 🎙️📄✨`;
     } else if (['brighten', 'darken', 'contrast', 'grayscale', 'sepia', 'sharpen', 'blur', 'rotate'].includes(intent)) {
@@ -577,6 +824,14 @@ export function buildAssistantResponse(parsed, actionResult) {
       return `உங்கள் படத்தின் பின்னணி (Background) வெற்றிகரமாக நீக்கப்பட்டது. வெளிப்படையான PNG கோப்பு தயாராக உள்ளது! ✂️✨`;
     } else if (intent === 'convert_format') {
       return `அற்புதம்! உங்கள் ஆவணம் வெற்றிகரமாக ${actionResult.outExt.toUpperCase()} வடிவத்திற்கு மாற்றப்பட்டது. அலைன்மென்ட் மற்றும் வடிவமைப்பு துல்லியமாகப் பாதுகாக்கப்பட்டுள்ளது! 📄✨`;
+    } else if (intent === 'reverse_gif') {
+      return `அற்புதம்! உங்கள் GIF அசைவுப்படம் வெற்றிகரமாக தலைகீழாக (Reverse) மாற்றப்பட்டது! கீழே உள்ள மாதிரியைப் பார்த்துப் பதிவிறக்கிக் கொள்ளலாம்! 🎬🔄✨`;
+    } else if (intent === 'excel_dedup') {
+      return `வெற்றிகரமாக எக்செல் தாளில் இருந்த ${actionResult.metadata?.duplicatesRemoved || 0} போலி வரிகள் நீக்கப்பட்டு தூய்மைப்படுத்தப்பட்டது! 📊✨`;
+    } else if (intent === 'create_zip') {
+      return `உங்கள் கோப்பு வெற்றிகரமாக கச்சிதமான ZIP காப்பகமாக மாற்றப்பட்டது! 📦✨`;
+    } else if (intent === 'extract_zip') {
+      return `ZIP காப்பகத்தில் இருந்த கோப்புகள் வெற்றிகரமாகப் பிரித்தெடுக்கப்பட்டன! 📦📂✨`;
     } else if (intent === 'audio_to_transcript') {
       return `அற்புதம்! உங்கள் ஆடியோ கோப்பு வெற்றிகரமாக உரை வடிவத்திற்கு (Transcript - ${actionResult.outExt.toUpperCase()}) மாற்றப்பட்டது. துல்லியமான நேரக் குறிப்புகள் (Timestamps) மற்றும் வசனங்களுடன் தயாராக உள்ளது! 🎙️📄✨`;
     }
@@ -591,6 +846,14 @@ export function buildAssistantResponse(parsed, actionResult) {
       return `I've cleanly removed the background from your image! The subject has been isolated into a transparent PNG. Check the live preview below! ✂️`;
     } else if (intent === 'convert_format') {
       return `Conversion complete! Your file is now converted to ${actionResult.outExt.toUpperCase()} with layout, typography, and styling preserved. 📄`;
+    } else if (intent === 'reverse_gif') {
+      return `Successfully reversed your GIF animation! The boomerang loop is ready for preview and download below. 🎬🔄`;
+    } else if (intent === 'excel_dedup') {
+      return `Successfully cleaned duplicate rows from your spreadsheet (${actionResult.metadata?.duplicatesRemoved || 0} duplicates removed). Preview and download your clean workbook below! 📊✨`;
+    } else if (intent === 'create_zip') {
+      return `Successfully packaged your file into a compressed ZIP archive! Ready to download below. 📦✨`;
+    } else if (intent === 'extract_zip') {
+      return `Successfully extracted and unpacked the contents of your ZIP archive! 📦📂`;
     } else if (intent === 'audio_to_transcript') {
       return `Transcription complete! Your audio has been transcribed into ${actionResult.outExt.toUpperCase()} with speech segments, duration analysis, and timestamps. You can preview or download below! 🎙️📄`;
     }

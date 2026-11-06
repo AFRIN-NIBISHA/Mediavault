@@ -123,6 +123,8 @@ export async function login(req, res) {
 
     await logActivity(user.id, 'login', 'user', user.id, { username: user.username }, req.ip);
 
+    const liveStorage = await recalculateUserStorage(user.id);
+
     return res.json({
       success: true,
       message: 'Login successful.',
@@ -136,7 +138,24 @@ export async function login(req, res) {
         avatarUrl: user.avatar_url,
         bio: user.bio,
         storageLimit: user.storage_limit_bytes || 53687091200,
-        themePreference: user.theme_preference || 'light'
+        themePreference: user.theme_preference || 'light',
+        profile: {
+          fullName: user.full_name || user.username,
+          avatarUrl: user.avatar_url,
+          bio: user.bio,
+          storageLimit: user.storage_limit_bytes || 53687091200,
+          themePreference: user.theme_preference || 'light'
+        },
+        storage: {
+          total: liveStorage?.total || 0,
+          photos: liveStorage?.photos || 0,
+          videos: liveStorage?.videos || 0,
+          documents: liveStorage?.documents || 0,
+          pdfs: liveStorage?.pdfs || 0,
+          archives: liveStorage?.archives || 0,
+          audio: liveStorage?.audio || 0,
+          other: liveStorage?.other || 0
+        }
       }
     });
   } catch (err) {
