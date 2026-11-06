@@ -149,6 +149,10 @@ export async function handleUniversalConvert(req, res, next) {
       } else {
         resultMeta = await conversionService.convertAudio(input.filePath, tempOutputPath, opts);
       }
+    }
+    // 9. Text to Audio (TTS)
+    else if (['txt', 'text'].includes(ext) || toolId === 'text-to-audio' || ((['docx', 'doc', 'pdf'].includes(ext)) && normTarget === 'mp3')) {
+      resultMeta = await conversionService.convertTextToAudio(input.filePath, tempOutputPath, opts);
     } else {
       throw new Error(`Format .${ext} is currently unsupported for conversion to .${normTarget}`);
     }
@@ -282,6 +286,71 @@ export async function handleAudioToText(req, res, next) {
 }
 
 /**
+ * Text to Audio (TTS)
+ */
+export async function handleTextToAudio(req, res, next) {
+  try {
+    let text = req.body.text || '';
+    let originalName = 'spoken-narration.mp3';
+    let inputPath = null;
+
+    if (req.file && req.file.path) {
+      inputPath = req.file.path;
+      originalName = `${path.parse(req.file.originalname).name}-narration.mp3`;
+    } else if (req.body.fileId) {
+      const dbRes = await query(
+        'SELECT * FROM files WHERE id = $1 AND user_id = $2 AND is_trashed = false',
+        [req.body.fileId, req.user.id]
+      );
+      if (dbRes.rows.length > 0) {
+        inputPath = dbRes.rows[0].file_path;
+        originalName = `${path.parse(dbRes.rows[0].original_name).name}-narration.mp3`;
+      }
+    }
+
+    const {
+      language = 'en',
+      saveToVault = true
+    } = req.body;
+
+    const uploadDir = path.resolve(process.cwd(), 'uploads');
+    const outFilename = originalName.endsWith('.mp3') ? originalName : `${originalName}.mp3`;
+    const tempOutputPath = path.join(uploadDir, `tts-${Date.now()}-${uuidv4()}.mp3`);
+
+    const resultMeta = await conversionService.convertTextToAudio(
+      inputPath || text,
+      tempOutputPath,
+      { language }
+    );
+
+    const outputBuffer = fs.readFileSync(tempOutputPath);
+    let savedFile = null;
+
+    if (saveToVault) {
+      savedFile = await saveBufferAsMediaVaultFile(
+        req.user.id,
+        outputBuffer,
+        outFilename,
+        { summary: `Text to Audio Narration (${resultMeta.language || language})` }
+      );
+    }
+
+    res.json({
+      success: true,
+      message: 'Text converted to spoken audio successfully.',
+      file: savedFile,
+      filename: outFilename,
+      downloadUrl: savedFile ? `/api/files/${savedFile.id}/download` : null,
+      previewUrl: savedFile ? `/api/files/${savedFile.id}/download` : null,
+      size: outputBuffer.length,
+      metadata: resultMeta
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
  * Universal Compression
  */
 export async function handleCompression(req, res, next) {
@@ -374,6 +443,7 @@ export async function getToolsCatalog(req, res) {
     { id: 'audio-wav', studio: 'audio', title: 'Audio to WAV', desc: 'Convert audio to uncompressed studio WAV', from: 'mp3', to: 'wav' },
     { id: 'audio-compress', studio: 'audio', title: 'Compress Audio', desc: 'Optimize bitrate (128k/64k) to reduce audio file size', from: 'mp3', to: 'mp3' },
     { id: 'audio-to-text', studio: 'audio', title: 'Audio to Transcript / Text', desc: 'Transcribe speech in audio to readable text, timestamps, subtitles & Word documents', from: 'audio', to: 'txt' },
+    { id: 'text-to-audio', studio: 'audio', title: 'Text to Audio (TTS)', desc: 'Convert written text, document or script to natural spoken MP3 voice', from: 'text', to: 'mp3' },
 
     // Video Studio
     { id: 'video-mp4', studio: 'video', title: 'Video to MP4', desc: 'Convert MOV, AVI, or WebM to universal MP4', from: 'mov', to: 'mp4' },

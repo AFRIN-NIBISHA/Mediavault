@@ -4,6 +4,7 @@ import { query } from '../database/db.js';
 import { saveBufferAsMediaVaultFile } from '../utils/vaultFileSaver.js';
 import * as assistantService from '../services/assistantService.js';
 import * as docGenService from '../services/docGenService.js';
+import * as conversionService from '../services/conversionService.js';
 
 export async function handleAssistantChat(req, res, next) {
   try {
@@ -33,6 +34,100 @@ export async function handleAssistantChat(req, res, next) {
     }
 
     const lang = assistantService.detectLanguage(message);
+
+    // 0. CHECK FIRST: Text to Audio (TTS) Request
+    const lowerMsg = message.toLowerCase().trim();
+    const isTtsRequest =
+      lowerMsg.includes('txt to audio') ||
+      lowerMsg.includes('text to audio') ||
+      lowerMsg.includes('text to speech') ||
+      lowerMsg.includes('txt to speech') ||
+      lowerMsg.includes('text to mp3') ||
+      lowerMsg.includes('txt to mp3') ||
+      lowerMsg.includes('to audio') ||
+      lowerMsg.includes('to speech') ||
+      lowerMsg.includes('text-ah audio') ||
+      lowerMsg.includes('text ah audio') ||
+      lowerMsg.includes('audio-va mathu') ||
+      lowerMsg.includes('audio va mathu') ||
+      lowerMsg.includes('voice-ah mathu') ||
+      lowerMsg.includes('voice ah mathu') ||
+      lowerMsg.includes('speak this') ||
+      lowerMsg.includes('read aloud') ||
+      lowerMsg.includes('audio generate') ||
+      lowerMsg.includes('ஆடியோவாக மாற்று') ||
+      lowerMsg.includes('குரலாக மாற்று');
+
+    if (isTtsRequest) {
+      let textToSpeak = message;
+      const stripPatterns = [
+        /txt\s+to\s+audio/gi,
+        /text\s+to\s+audio/gi,
+        /text\s+to\s+speech/gi,
+        /txt\s+to\s+speech/gi,
+        /text\s+to\s+mp3/gi,
+        /txt\s+to\s+mp3/gi,
+        /to\s+audio/gi,
+        /to\s+speech/gi,
+        /text-?ah\s+audio-?va\s+mathu/gi,
+        /audio-?va\s+mathu/gi,
+        /audio\s+va\s+mathu/gi,
+        /voice-?ah\s+mathu/gi,
+        /voice\s+ah\s+mathu/gi,
+        /speak\s+this/gi,
+        /read\s+aloud/gi,
+        /\btts\b/gi
+      ];
+      for (const p of stripPatterns) {
+        textToSpeak = textToSpeak.replace(p, '').trim();
+      }
+
+      // If text in message is too short and there's an attached file, read from attached file!
+      if (textToSpeak.length < 5 && inputPath && fs.existsSync(inputPath)) {
+        textToSpeak = inputPath; // convertTextToAudio handles docx, pdf, txt files automatically!
+      } else if (textToSpeak.length < 5) {
+        textToSpeak = 'MediaVault digital asset management and universal converter.';
+      }
+
+      const timestamp = Date.now();
+      const outFilename = `narration-${timestamp}.mp3`;
+      const outputPath = path.join(uploadDir, outFilename);
+
+      await conversionService.convertTextToAudio(textToSpeak, outputPath, {
+        language: lang === 'tamil' ? 'ta' : (lang === 'hindi' ? 'hi' : 'en')
+      });
+
+      const outputBuffer = fs.readFileSync(outputPath);
+      const safeSummary = `AI Copilot: Text to Audio (MP3 Narration)`.substring(0, 240);
+      const savedFile = await saveBufferAsMediaVaultFile(
+        userId,
+        outputBuffer,
+        outFilename,
+        { summary: safeSummary }
+      );
+
+      let reply = '';
+      if (lang === 'tanglish') {
+        reply = `Super! Neenga kudutha text-ah natural voice MP3 audio-va successfully convert panniten! Keela player-la direct-ah kettu download pannikonga! 🎙️🔊✨`;
+      } else if (lang === 'tamil') {
+        reply = `அற்புதம்! நீங்கள் அளித்த உரை வெற்றிகரமாக இயற்கை குரல் MP3 ஆடியோவாக மாற்றப்பட்டது! கீழே உள்ள பிளேயரில் நேரடியாகக் கேட்டுப் பதிவிறக்கிக் கொள்ளலாம்! 🎙️🔊✨`;
+      } else {
+        reply = `I've successfully converted your text into a spoken MP3 audio narration! You can play it directly below or download it. 🎙️🔊✨`;
+      }
+
+      return res.json({
+        success: true,
+        reply,
+        operation: 'Text to Audio (MP3 Narration)',
+        file: savedFile,
+        downloadUrl: `/api/files/${savedFile.id}/download`,
+        previewUrl: `/api/files/${savedFile.id}/download`,
+        outFilename,
+        outExt: 'mp3',
+        size: savedFile.size,
+        metadata: { language: lang }
+      });
+    }
 
     // CASE 1: No file attached OR user explicitly asking to create/ready a new document like ChatGPT
     if ((!inputPath || !fs.existsSync(inputPath)) || docGenService.isDocCreationRequest(message)) {

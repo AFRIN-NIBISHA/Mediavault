@@ -97,6 +97,7 @@ const TOOLS = [
   { id: 'audio-to-wav', studio: 'audio', title: 'Audio to WAV', desc: 'Convert compressed audio to uncompressed studio-grade WAV.', from: 'AUDIO', to: 'WAV', icon: Music },
   { id: 'audio-compress', studio: 'audio', title: 'Audio Compression', desc: 'Reduce audio file size by optimizing bitrate (128k / 64k).', from: 'MP3/WAV', to: 'MP3', icon: Zap },
   { id: 'audio-to-text', studio: 'audio', title: 'Audio to Transcript / Text', desc: 'Transcribe speech in audio to readable text, timestamps, subtitles & Word documents.', from: 'AUDIO', to: 'TXT', icon: FileText },
+  { id: 'text-to-audio', studio: 'audio', title: 'Text to Audio (TTS)', desc: 'Convert written text, document or script to natural spoken MP3 voice narration.', from: 'TEXT', to: 'MP3', icon: Volume2 },
 
   // Video
   { id: 'video-to-mp4', studio: 'video', title: 'Video to MP4', desc: 'Transcode MOV, AVI, or WebM into widely compatible H.264 MP4.', from: 'VIDEO', to: 'MP4', icon: Film },
@@ -133,6 +134,7 @@ export function UniversalConverterPage() {
   const [ocrLanguage, setOcrLanguage] = useState('eng');
   const [audioLanguage, setAudioLanguage] = useState('eng');
   const [includeTimestamps, setIncludeTimestamps] = useState(true);
+  const [ttsText, setTtsText] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [speechTranscript, setSpeechTranscript] = useState('');
   const [transcriptViewMode, setTranscriptViewMode] = useState('verbatim');
@@ -176,6 +178,9 @@ export function UniversalConverterPage() {
   const handleSelectTool = (tool) => {
     setSelectedTool(tool);
     setTargetFormat(tool.to.toLowerCase());
+    if (tool.id === 'text-to-audio') {
+      setAudioLanguage('en');
+    }
     setResult(null);
     setErrorMessage('');
   };
@@ -208,7 +213,12 @@ export function UniversalConverterPage() {
   };
 
   const executeConversion = async () => {
-    if (!selectedFile && fileList.length === 0) {
+    if (selectedTool.id === 'text-to-audio') {
+      if (!ttsText.trim() && !selectedFile) {
+        setErrorMessage('Please enter text to speak or select a text/document file.');
+        return;
+      }
+    } else if (!selectedFile && fileList.length === 0) {
       setErrorMessage('Please upload or select a file first.');
       return;
     }
@@ -239,7 +249,26 @@ export function UniversalConverterPage() {
       };
 
       // Special tools routing
-      if (selectedTool.id === 'audio-to-text') {
+      if (selectedTool.id === 'text-to-audio') {
+        if (selectedFile) {
+          appendSourceFile();
+        }
+        formData.append('text', ttsText);
+        formData.append('language', audioLanguage || 'en');
+        setProgressStatus('Neural TTS Engine synthesizing studio MP3 narration...');
+        response = await api.post('/converter/text-to-audio', formData);
+        clearInterval(timer);
+        setProgress(100);
+        setProgressStatus('Narration Generated Successfully!');
+        setResult({
+          type: 'audio_narration',
+          audioUrl: response.data.previewUrl || response.data.downloadUrl,
+          downloadUrl: response.data.downloadUrl,
+          filename: response.data.filename,
+          size: response.data.size,
+          metadata: response.data.metadata
+        });
+      } else if (selectedTool.id === 'audio-to-text') {
         appendSourceFile();
         formData.append('targetFormat', targetFormat || 'txt');
         formData.append('language', audioLanguage);
@@ -648,6 +677,15 @@ export function UniversalConverterPage() {
                     </p>
                   )}
                 </div>
+              ) : selectedTool.id === 'text-to-audio' ? (
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-surface-800">
+                    Drop document or script (<span className="text-purple-600">TXT, DOCX, PDF</span>) to narrate
+                  </p>
+                  <p className="text-xs text-surface-400">
+                    Or directly type/paste your text in the script box below
+                  </p>
+                </div>
               ) : (
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-surface-800">
@@ -772,6 +810,62 @@ export function UniversalConverterPage() {
                     <option value="deu">German</option>
                     <option value="spa">Spanish</option>
                   </select>
+                </div>
+              )}
+
+              {/* Text to Audio (TTS) Settings */}
+              {selectedTool.id === 'text-to-audio' && (
+                <div className="space-y-4 pt-2 border-t border-surface-200/60">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-surface-700">
+                        Text / Script to Speak
+                      </label>
+                      <span className="text-[11px] text-surface-400">
+                        {ttsText.length} characters • Or upload TXT/DOCX/PDF above
+                      </span>
+                    </div>
+                    <textarea
+                      rows={4}
+                      value={ttsText}
+                      onChange={(e) => setTtsText(e.target.value)}
+                      placeholder="Type or paste the text, article, script, or notes you want to convert into spoken studio MP3 narration..."
+                      className="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-xl text-surface-900 text-xs sm:text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none resize-y"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <label className="block text-xs font-medium text-surface-600 mb-1.5">
+                        Spoken Voice Language
+                      </label>
+                      <select
+                        value={audioLanguage}
+                        onChange={(e) => setAudioLanguage(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-surface-300 rounded-xl text-surface-900 font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                      >
+                        <option value="en">English (Studio Voice)</option>
+                        <option value="ta">Tamil (தமிழ் குரல்)</option>
+                        <option value="hi">Hindi (हिन्दी आवाज़)</option>
+                        <option value="fr">French (Français)</option>
+                        <option value="de">German (Deutsch)</option>
+                        <option value="es">Spanish (Español)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-surface-600 mb-1.5">
+                        Output Audio Format
+                      </label>
+                      <select
+                        value="mp3"
+                        disabled
+                        className="w-full px-3 py-2 bg-surface-100 border border-surface-300 rounded-xl text-surface-600 font-medium focus:outline-none cursor-not-allowed"
+                      >
+                        <option value="mp3">MP3 (High Fidelity 24kHz Studio Audio)</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -901,7 +995,7 @@ export function UniversalConverterPage() {
             {/* Convert CTA Button */}
             <button
               onClick={executeConversion}
-              disabled={isProcessing || (!selectedFile && fileList.length === 0)}
+              disabled={isProcessing || (selectedTool.id === 'text-to-audio' ? (!ttsText.trim() && !selectedFile) : (!selectedFile && fileList.length === 0))}
               className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-sm shadow-lg shadow-purple-600/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
             >
               {isProcessing ? (
@@ -1083,6 +1177,38 @@ export function UniversalConverterPage() {
                   <pre className="p-4 bg-surface-50 rounded-2xl border border-surface-200 text-surface-900 text-xs font-mono max-h-64 overflow-y-auto whitespace-pre-wrap leading-relaxed">
                     {result.text || 'No text detected in this image.'}
                   </pre>
+                </div>
+              )}
+
+              {/* Audio Narration Result */}
+              {(result.type === 'audio_narration' || (result.type === 'file' && ['mp3', 'wav', 'ogg', 'aac'].some(ext => result.filename?.toLowerCase().endsWith(ext)))) && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-purple-50/60 rounded-2xl border border-purple-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-sm">
+                          <Volume2 className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-xs sm:text-sm text-surface-900">{result.filename}</p>
+                          <p className="text-[10px] text-surface-500">
+                            {result.size ? formatBytes(result.size) : 'Ready'} • Studio High-Fidelity Spoken Audio
+                          </p>
+                        </div>
+                      </div>
+                      {result.downloadUrl && (
+                        <a
+                          href={result.downloadUrl}
+                          download
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Download MP3
+                        </a>
+                      )}
+                    </div>
+                    <audio controls src={result.audioUrl || result.downloadUrl} className="w-full h-10 rounded-lg" />
+                  </div>
                 </div>
               )}
 

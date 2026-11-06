@@ -23,13 +23,16 @@ import {
   Layers,
   ChevronDown,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Volume2,
+  Music
 } from 'lucide-react';
 import api from '../../services/api';
 import { formatBytes } from '../../utils/formatters';
 import { convertImageOffline } from '../../utils/offlineConverter';
 
 const QUICK_ACTIONS = [
+  { label: '🎙️ Txt to audio (MP3)', prompt: 'MediaVault digital asset management and universal converter. Txt to audio' },
   { label: '📽️ 12 Slides Dark Theme (PPT)', prompt: 'MediaVault pathi 12 slides dark theme elegant presentation ready panni tha' },
   { label: '✨ 12 Slides Light Theme (PPT)', prompt: 'MediaVault pathi 12 slides light theme premium presentation ready panni tha' },
   { label: '🏛️ Corporate Navy Deck (PPT)', prompt: 'MediaVault pathi 12 slides corporate navy presentation ready panni kudu' },
@@ -415,6 +418,19 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
                               alt="Output Preview"
                               className="max-h-[200px] max-w-full object-contain rounded-md drop-shadow-md"
                             />
+                          </div>
+                        ) : m.outExt && ['mp3', 'wav', 'ogg', 'aac'].includes(m.outExt.toLowerCase()) ? (
+                          <div className="p-3 bg-white rounded-lg border border-purple-200 space-y-2">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                                <Volume2 className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-xs text-surface-900 truncate">{m.outFilename}</p>
+                                <p className="text-[10px] text-surface-500 uppercase">Spoken MP3 Audio Narration</p>
+                              </div>
+                            </div>
+                            <audio controls src={m.previewUrl || m.downloadUrl} className="w-full h-8 rounded" />
                           </div>
                         ) : (
                           <div className="p-3 bg-white rounded-lg border border-surface-200 flex items-center gap-3">

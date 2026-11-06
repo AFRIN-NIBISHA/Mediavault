@@ -71,7 +71,7 @@ export function PwaStatusBanner() {
 
       {/* 3. Install PWA Floating Prompt */}
       {isInstallable && !isInstalled && !installDismissed && (
-        <div className="fixed bottom-6 left-4 sm:left-6 lg:left-72 z-30 max-w-sm w-auto bg-white dark:bg-surface-900 border border-purple-200 dark:border-purple-800/50 rounded-3xl p-4 shadow-2xl shadow-purple-950/20 animate-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed bottom-24 right-4 sm:right-6 z-40 max-w-sm w-[calc(100vw-2rem)] sm:w-96 bg-white dark:bg-surface-900 border border-purple-200 dark:border-purple-800/50 rounded-3xl p-4 shadow-2xl shadow-purple-950/20 animate-in slide-in-from-bottom-4 duration-300">
           <div className="flex items-start justify-between gap-3 mb-2.5">
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-purple-600/30 shrink-0">
