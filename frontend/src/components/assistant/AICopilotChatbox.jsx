@@ -288,8 +288,8 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
   const containerClasses = standalone
     ? 'w-full h-full flex flex-col bg-white rounded-3xl border border-surface-200 shadow-xl overflow-hidden'
     : isMaximized
-    ? 'fixed inset-4 sm:inset-10 z-50 flex flex-col bg-white rounded-3xl border border-surface-200 shadow-2xl overflow-hidden'
-    : 'fixed bottom-6 right-6 z-50 w-[95vw] sm:w-[440px] h-[640px] max-h-[88vh] flex flex-col bg-white rounded-3xl border border-surface-200 shadow-2xl shadow-purple-950/15 overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200';
+      ? 'fixed inset-4 sm:inset-10 z-50 flex flex-col bg-white rounded-3xl border border-surface-200 shadow-2xl overflow-hidden'
+      : 'fixed bottom-6 right-6 z-50 w-[95vw] sm:w-[440px] h-[640px] max-h-[88vh] flex flex-col bg-white rounded-3xl border border-surface-200 shadow-2xl shadow-purple-950/15 overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200';
 
   return (
     <>
@@ -381,13 +381,12 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
                 <div className={`max-w-[85%] space-y-2 ${isUser ? 'items-end' : 'items-start'}`}>
                   {/* Message Bubble */}
                   <div
-                    className={`p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm ${
-                      isUser
+                    className={`p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm ${isUser
                         ? 'bg-purple-600 text-white rounded-br-none'
                         : m.isError
-                        ? 'bg-red-50 text-red-700 border border-red-200 rounded-bl-none'
-                        : 'bg-white text-surface-900 border border-surface-200/80 rounded-bl-none'
-                    }`}
+                          ? 'bg-red-50 text-red-700 border border-red-200 rounded-bl-none'
+                          : 'bg-white text-surface-900 border border-surface-200/80 rounded-bl-none'
+                      }`}
                   >
                     {/* User attachment pill */}
                     {isUser && m.attachment && (
@@ -605,11 +604,10 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
                 <button
                   key={cat}
                   onClick={() => setVaultCategory(cat)}
-                  className={`px-3 py-1 rounded-full font-bold capitalize transition-all cursor-pointer ${
-                    vaultCategory === cat
+                  className={`px-3 py-1 rounded-full font-bold capitalize transition-all cursor-pointer ${vaultCategory === cat
                       ? 'bg-purple-600 text-white shadow-sm'
                       : 'bg-white text-surface-600 hover:bg-surface-100'
-                  }`}
+                    }`}
                 >
                   {cat}
                 </button>
