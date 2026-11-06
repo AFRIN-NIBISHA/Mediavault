@@ -34,18 +34,18 @@ import { formatBytes } from '../utils/formatters';
 import { convertImageOffline, convertTextDataOffline } from '../utils/offlineConverter';
 
 const STUDIOS = [
-  { id: 'all', name: 'All Tools', icon: Zap, color: 'text-purple-600 bg-purple-50 border-purple-200' },
-  { id: 'pdf', name: 'PDF Studio', icon: FileText, color: 'text-red-600 bg-red-50 border-red-200' },
-  { id: 'word', name: 'Word Studio', icon: FileText, color: 'text-blue-600 bg-blue-50 border-blue-200' },
-  { id: 'excel', name: 'Excel Studio', icon: FileSpreadsheet, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
-  { id: 'powerpoint', name: 'PowerPoint Studio', icon: FileText, color: 'text-orange-600 bg-orange-50 border-orange-200' },
-  { id: 'image', name: 'Image Studio', icon: ImageIcon, color: 'text-pink-600 bg-pink-50 border-pink-200' },
-  { id: 'gif', name: 'GIF Studio', icon: Film, color: 'text-amber-600 bg-amber-50 border-amber-200' },
-  { id: 'sticker', name: 'Sticker Studio', icon: Sparkles, color: 'text-yellow-600 bg-yellow-50 border-yellow-200' },
-  { id: 'audio', name: 'Audio Studio', icon: Music, color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
-  { id: 'video', name: 'Video Studio', icon: Film, color: 'text-violet-600 bg-violet-50 border-violet-200' },
-  { id: 'archive', name: 'Archive Studio', icon: Archive, color: 'text-teal-600 bg-teal-50 border-teal-200' },
-  { id: 'ai', name: 'AI Studio', icon: Sparkles, color: 'text-purple-600 bg-purple-50 border-purple-200' },
+  { id: 'all', name: 'All Tools', icon: Zap, color: 'text-sky-700 bg-sky-50 border-sky-200' },
+  { id: 'pdf', name: 'PDF Studio', icon: FileText, color: 'text-rose-700 bg-rose-50 border-rose-200' },
+  { id: 'word', name: 'Word Studio', icon: FileText, color: 'text-sky-700 bg-sky-50 border-sky-200' },
+  { id: 'excel', name: 'Excel Studio', icon: FileSpreadsheet, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+  { id: 'powerpoint', name: 'PowerPoint Studio', icon: FileText, color: 'text-amber-700 bg-amber-50 border-amber-200' },
+  { id: 'image', name: 'Image Studio', icon: ImageIcon, color: 'text-indigo-700 bg-indigo-50 border-indigo-200' },
+  { id: 'gif', name: 'GIF Studio', icon: Film, color: 'text-amber-700 bg-amber-50 border-amber-200' },
+  { id: 'sticker', name: 'Sticker Studio', icon: Sparkles, color: 'text-teal-700 bg-teal-50 border-teal-200' },
+  { id: 'audio', name: 'Audio Studio', icon: Music, color: 'text-violet-700 bg-violet-50 border-violet-200' },
+  { id: 'video', name: 'Video Studio', icon: Film, color: 'text-indigo-700 bg-indigo-50 border-indigo-200' },
+  { id: 'archive', name: 'Archive Studio', icon: Archive, color: 'text-teal-700 bg-teal-50 border-teal-200' },
+  { id: 'ai', name: 'AI Studio', icon: Sparkles, color: 'text-sky-700 bg-sky-50 border-sky-200' },
 ];
 
 const TOOLS = [
@@ -496,35 +496,36 @@ export function UniversalConverterPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-16">
       {/* Hero Header */}
-      <div className="bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 rounded-3xl p-8 sm:p-10 text-white shadow-xl shadow-purple-900/10 relative overflow-hidden">
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-white/5 blur-3xl pointer-events-none rounded-full" />
-        <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold tracking-wide border border-white/20">
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            11 SPECIALIZED CONVERSION & MEDIA PROCESSING STUDIOS
+      <div className="bg-gradient-to-br from-white via-sky-50/40 to-indigo-50/30 border border-slate-200/80 rounded-3xl p-8 sm:p-10 shadow-sm relative overflow-hidden">
+        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-sky-200/15 blur-3xl pointer-events-none rounded-full" />
+        <div className="relative z-10 max-w-3xl space-y-3.5">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 shadow-subtle border border-slate-200/80 text-xs font-semibold tracking-wide text-slate-700">
+            <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
+            <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+            <span className="text-slate-800">11 SPECIALIZED CONVERSION & MEDIA STUDIOS</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 leading-tight">
             Universal File Converter & Media Studio
           </h1>
-          <p className="text-purple-100 text-sm sm:text-base leading-relaxed">
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
             High-fidelity document, image, vector, audio, video, archive and AI-powered conversions. Genuine lossless processing algorithms with zero format corruption.
           </p>
         </div>
 
         {/* Global Live Search Bar */}
-        <div className="mt-8 relative max-w-2xl">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" />
+        <div className="mt-7 relative max-w-2xl">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search 25+ conversion tools (e.g. 'PDF to Word', 'Video to GIF', 'Excel to JSON', 'Sticker', 'OCR')..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3.5 bg-white text-surface-900 placeholder:text-surface-400 rounded-2xl shadow-lg border border-purple-200/50 focus:outline-none focus:ring-4 focus:ring-purple-300 transition-all font-medium text-sm"
+            className="w-full pl-11 pr-4 py-3 bg-white text-slate-900 placeholder:text-slate-400 rounded-2xl shadow-subtle border border-slate-200/80 focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all font-medium text-sm"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold px-2.5 py-1 bg-surface-100 text-surface-600 rounded-lg hover:bg-surface-200"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 cursor-pointer"
             >
               Clear
             </button>
@@ -533,7 +534,7 @@ export function UniversalConverterPage() {
       </div>
 
       {/* 11 Studio Workspace Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
         {STUDIOS.map((studio) => {
           const Icon = studio.icon;
           const isActive = activeStudio === studio.id;
@@ -545,13 +546,13 @@ export function UniversalConverterPage() {
                 const firstMatching = TOOLS.find(t => studio.id === 'all' || t.studio === studio.id);
                 if (firstMatching) handleSelectTool(firstMatching);
               }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all border ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap transition-all border cursor-pointer ${
                 isActive
-                  ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-600/20'
-                  : 'bg-white text-surface-700 border-surface-200/70 hover:bg-surface-50 hover:border-surface-300'
+                  ? 'bg-sky-50 text-sky-700 font-semibold border-sky-200/90 shadow-subtle'
+                  : 'bg-white text-slate-600 border-slate-200/70 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-surface-500'}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-sky-600' : 'text-slate-400'}`} />
               <span>{studio.name}</span>
             </button>
           );
@@ -563,10 +564,10 @@ export function UniversalConverterPage() {
         {/* Left Column: Tools Catalog Grid (5 Cols) */}
         <div className="lg:col-span-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-surface-900">
+            <h2 className="text-sm font-bold tracking-tight text-slate-900 uppercase">
               Available Tools ({filteredTools.length})
             </h2>
-            <span className="text-xs text-surface-500 font-medium">Click to activate tool</span>
+            <span className="text-xs text-slate-500 font-medium">Click to activate studio tool</span>
           </div>
 
           <div className="space-y-3 max-h-[750px] overflow-y-auto pr-1">
@@ -579,32 +580,32 @@ export function UniversalConverterPage() {
                   onClick={() => handleSelectTool(tool)}
                   className={`p-4 rounded-2xl border cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-purple-50/70 border-purple-400 ring-2 ring-purple-500/20 shadow-sm'
-                      : 'bg-white border-surface-200/80 hover:border-purple-200 hover:bg-surface-50/80'
+                      ? 'bg-sky-50/70 border-sky-300 ring-2 ring-sky-500/20 shadow-subtle'
+                      : 'bg-white border-slate-200/80 hover:border-sky-200 hover:bg-slate-50/80'
                   }`}
                 >
                   <div className="flex items-start gap-3.5">
                     <div className={`p-2.5 rounded-xl ${
-                      isSelected ? 'bg-purple-600 text-white' : 'bg-surface-100 text-surface-600'
+                      isSelected ? 'bg-gradient-to-br from-sky-600 to-indigo-600 text-white shadow-subtle' : 'bg-slate-100 text-slate-600'
                     }`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <h3 className="font-semibold text-sm text-surface-900 truncate">
+                        <h3 className="font-semibold text-sm text-slate-900 truncate">
                           {tool.title}
                         </h3>
                         <div className="flex items-center gap-1.5 text-[11px] font-bold">
-                          <span className="px-2 py-0.5 rounded-md bg-surface-100 text-surface-600 uppercase">
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 uppercase">
                             {tool.from}
                           </span>
-                          <ArrowRight className="w-3 h-3 text-surface-400" />
-                          <span className="px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 uppercase">
+                          <ArrowRight className="w-3 h-3 text-slate-400" />
+                          <span className="px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-100 uppercase">
                             {tool.to}
                           </span>
                         </div>
                       </div>
-                      <p className="text-xs text-surface-500 mt-1 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
                         {tool.desc}
                       </p>
                     </div>
@@ -614,10 +615,10 @@ export function UniversalConverterPage() {
             })}
 
             {filteredTools.length === 0 && (
-              <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-surface-300">
-                <Search className="w-8 h-8 text-surface-400 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-surface-700">No matching tools found</p>
-                <p className="text-xs text-surface-400 mt-1">Try another search term or switch categories.</p>
+              <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-slate-300">
+                <Search className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-slate-700">No matching tools found</p>
+                <p className="text-xs text-slate-400 mt-1">Try another search term or switch categories.</p>
               </div>
             )}
           </div>
@@ -625,15 +626,15 @@ export function UniversalConverterPage() {
 
         {/* Right Column: Execution Workspace & Options (7 Cols) */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="bg-white rounded-3xl border border-surface-200 shadow-sm p-6 sm:p-8 space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-subtle p-6 sm:p-8 space-y-6">
             {/* Header of Active Tool */}
-            <div className="flex items-start justify-between border-b border-surface-100 pb-5">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-5">
               <div>
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-purple-50 text-purple-700 font-bold text-xs uppercase tracking-wider mb-2">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-sky-50 text-sky-700 font-semibold text-xs uppercase tracking-wider mb-2 border border-sky-100">
                   Active Tool
                 </div>
-                <h3 className="text-xl font-bold text-surface-900">{selectedTool.title}</h3>
-                <p className="text-xs sm:text-sm text-surface-500 mt-1">{selectedTool.desc}</p>
+                <h3 className="text-xl font-bold text-slate-900">{selectedTool.title}</h3>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">{selectedTool.desc}</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -641,7 +642,7 @@ export function UniversalConverterPage() {
                     loadVaultFiles();
                     setShowVaultPicker(true);
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-xl border border-sky-200/70 transition-colors cursor-pointer"
                 >
                   <FolderOpen className="w-3.5 h-3.5" />
                   Select from Vault
@@ -654,7 +655,7 @@ export function UniversalConverterPage() {
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleFileDrop}
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-surface-300 hover:border-purple-500 rounded-2xl p-8 text-center cursor-pointer transition-all bg-surface-50/50 hover:bg-purple-50/30 group"
+              className="border-2 border-dashed border-slate-200/90 hover:border-sky-500 rounded-2xl p-8 text-center cursor-pointer transition-all bg-slate-50/50 hover:bg-sky-50/30 group"
             >
               <input
                 type="file"
@@ -663,36 +664,36 @@ export function UniversalConverterPage() {
                 multiple={selectedTool.id === 'create-zip-bundle'}
                 className="hidden"
               />
-              <div className="w-14 h-14 bg-white shadow-md shadow-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-3.5 text-purple-600 group-hover:scale-110 transition-transform">
+              <div className="w-14 h-14 bg-white shadow-subtle border border-slate-200/70 rounded-2xl flex items-center justify-center mx-auto mb-3.5 text-sky-600 group-hover:scale-105 transition-transform">
                 <Upload className="w-6 h-6" />
               </div>
               {selectedFile ? (
                 <div className="space-y-1">
-                  <p className="text-sm font-bold text-surface-900">{selectedFile.name}</p>
-                  <p className="text-xs text-surface-500">
+                  <p className="text-sm font-bold text-slate-900">{selectedFile.name}</p>
+                  <p className="text-xs text-slate-500">
                     {formatBytes(selectedFile.size)} • Click or drop another file to replace
                   </p>
                   {fileList.length > 1 && (
-                    <p className="text-xs font-semibold text-purple-600">
+                    <p className="text-xs font-semibold text-sky-600">
                       + {fileList.length - 1} additional files selected for bundle
                     </p>
                   )}
                 </div>
               ) : selectedTool.id === 'text-to-audio' ? (
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-surface-800">
-                    Drop document or script (<span className="text-purple-600">TXT, DOCX, PDF</span>) to narrate
+                  <p className="text-sm font-semibold text-slate-800">
+                    Drop document or script (<span className="text-sky-600">TXT, DOCX, PDF</span>) to narrate
                   </p>
-                  <p className="text-xs text-surface-400">
+                  <p className="text-xs text-slate-400">
                     Or directly type/paste your text in the script box below
                   </p>
                 </div>
               ) : (
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-surface-800">
-                    Drop your <span className="text-purple-600">{selectedTool.from}</span> file here, or <span className="text-purple-600 underline">browse</span>
+                  <p className="text-sm font-semibold text-slate-800">
+                    Drop your <span className="text-sky-600">{selectedTool.from}</span> file here, or <span className="text-sky-600 underline">browse</span>
                   </p>
-                  <p className="text-xs text-surface-400">
+                  <p className="text-xs text-slate-400">
                     Supports high-speed conversion directly on your server with automated saving
                   </p>
                 </div>
@@ -700,9 +701,9 @@ export function UniversalConverterPage() {
             </div>
 
             {/* Dynamic Tool Options Panel */}
-            <div className="p-5 bg-surface-50/80 rounded-2xl border border-surface-200/70 space-y-4">
-              <div className="flex items-center gap-2 text-xs font-bold text-surface-700 uppercase tracking-wider">
-                <Sliders className="w-4 h-4 text-purple-600" />
+            <div className="p-5 bg-slate-50/70 rounded-2xl border border-slate-200/70 space-y-4">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <Sliders className="w-4 h-4 text-sky-600" />
                 Conversion Settings
               </div>
 
@@ -979,14 +980,17 @@ export function UniversalConverterPage() {
 
             {/* Progress Bar (when active) */}
             {isProcessing && (
-              <div className="space-y-2 p-4 bg-purple-50/60 rounded-2xl border border-purple-200">
-                <div className="flex justify-between text-xs font-semibold text-purple-900">
-                  <span>{progressStatus}</span>
-                  <span>{progress}%</span>
+              <div className="space-y-2 p-4 bg-sky-50/70 rounded-2xl border border-sky-100 shadow-subtle">
+                <div className="flex justify-between text-xs font-semibold text-slate-800">
+                  <span className="flex items-center gap-1.5 text-sky-700">
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    {progressStatus}
+                  </span>
+                  <span className="font-bold text-sky-600">{progress}%</span>
                 </div>
-                <div className="w-full h-2.5 bg-purple-200 rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-slate-200/80 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-purple-600 transition-all duration-300 rounded-full"
+                    className="h-full bg-gradient-to-r from-sky-500 to-indigo-600 transition-all duration-300 rounded-full"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -997,7 +1001,7 @@ export function UniversalConverterPage() {
             <button
               onClick={executeConversion}
               disabled={isProcessing || (selectedTool.id === 'text-to-audio' ? (!ttsText.trim() && !selectedFile) : (!selectedFile && fileList.length === 0))}
-              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-sm shadow-lg shadow-purple-600/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-apple hover:shadow-elevated transition-all transform active:scale-97 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
             >
               {isProcessing ? (
                 <>
@@ -1275,13 +1279,13 @@ export function UniversalConverterPage() {
 
       {/* Vault File Selection Modal */}
       {showVaultPicker && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl border border-surface-200 shadow-2xl max-w-lg w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-surface-100 pb-3">
-              <h3 className="font-bold text-surface-900 text-base">Select File from MediaVault</h3>
+        <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-apple max-w-lg w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-slate-900 text-base">Select File from MediaVault</h3>
               <button
                 onClick={() => setShowVaultPicker(false)}
-                className="text-surface-400 hover:text-surface-600 text-sm font-semibold"
+                className="text-slate-400 hover:text-slate-600 text-sm font-semibold cursor-pointer"
               >
                 ✕
               </button>
@@ -1289,9 +1293,9 @@ export function UniversalConverterPage() {
 
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
               {isLoadingVault ? (
-                <div className="py-12 text-center text-surface-400 text-xs">Loading files...</div>
+                <div className="py-12 text-center text-slate-400 text-xs">Loading files...</div>
               ) : vaultFiles.length === 0 ? (
-                <div className="py-12 text-center text-surface-400 text-xs">No files found in your vault.</div>
+                <div className="py-12 text-center text-slate-400 text-xs">No files found in your vault.</div>
               ) : (
                 vaultFiles.map((file) => (
                   <div
@@ -1304,13 +1308,13 @@ export function UniversalConverterPage() {
                       });
                       setShowVaultPicker(false);
                     }}
-                    className="flex items-center justify-between p-3 rounded-xl border border-surface-200 hover:border-purple-300 hover:bg-purple-50/50 cursor-pointer transition-all"
+                    className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 hover:border-sky-300 hover:bg-sky-50/50 cursor-pointer transition-all"
                   >
                     <div className="truncate mr-3">
-                      <p className="text-xs font-semibold text-surface-800 truncate">{file.original_name}</p>
-                      <p className="text-[11px] text-surface-400">{formatBytes(file.size)}</p>
+                      <p className="text-xs font-semibold text-slate-800 truncate">{file.original_name}</p>
+                      <p className="text-[11px] text-slate-400">{formatBytes(file.size)}</p>
                     </div>
-                    <span className="text-xs font-bold text-purple-600 px-2 py-1 bg-purple-50 rounded-lg">
+                    <span className="text-xs font-semibold text-sky-700 px-2.5 py-1 bg-sky-50 border border-sky-100 rounded-lg">
                       Select
                     </span>
                   </div>

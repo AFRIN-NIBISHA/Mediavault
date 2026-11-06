@@ -8,40 +8,76 @@ export default {
   theme: {
     extend: {
       colors: {
+        // MediaVault by Secure Hardline Design Tokens
         brand: {
-          50: '#faf5ff',
-          100: '#f3e8ff',
-          200: '#e9d5ff',
-          300: '#d8b4fe',
-          400: '#c084fc',
-          500: '#a855f7',
-          600: '#9333ea',
-          700: '#7e22ce',
-          800: '#6b21a8',
-          900: '#581c87',
-          950: '#3b0764'
+          50: '#F0F9FF',
+          100: '#E0F2FE',
+          200: '#BAE6FD',
+          300: '#7DD3FC',
+          400: '#38BDF8',
+          500: '#0EA5E9',
+          600: '#0284C7', // Primary Accent: Electric Cerulean
+          700: '#0369A1',
+          800: '#075985',
+          900: '#0C4A6E',
+          950: '#082F49'
+        },
+        iris: {
+          50: '#EEF2FF',
+          100: '#E0E7FF',
+          200: '#C7D2FE',
+          300: '#A5B4FC',
+          400: '#818CF8',
+          500: '#6366F1', // Secondary Accent: Iris
+          600: '#4F46E5',
+          700: '#4338CA',
+          800: '#3730A3',
+          900: '#312E81'
         },
         surface: {
-          50: '#fcfaff',
-          100: '#f7f4fa',
-          200: '#ede8f5',
-          300: '#ded5ea',
-          400: '#9b8faf',
-          500: '#6e6185',
-          600: '#534769',
-          700: '#3c324e',
-          800: '#261e35',
-          900: '#150f21',
-          950: '#0c0714'
+          50: '#F9F9FB',  // Background Primary Canvas (Soft Ivory / Off-White)
+          100: '#F1F3F7', // Subtle Container / Sidebar Cool Light Slate
+          200: '#E2E8F0', // Border Strokes rgba(226, 232, 240, 0.8)
+          300: '#CBD5E1',
+          400: '#94A3B8', // Metadata / Captions (Soft Fog Gray)
+          500: '#64748B',
+          600: '#475569', // Secondary / Body (Muted Slate)
+          700: '#334155',
+          800: '#1E293B',
+          900: '#0F172A', // Primary Headings (Deep Slate Ink)
+          950: '#020617'
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+        sans: [
+          'Inter',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"SF Pro Display"',
+          '"SF Pro Text"',
+          '"Helvetica Neue"',
+          'sans-serif'
+        ]
+      },
+      letterSpacing: {
+        'tightest': '-0.035em',
+        'tighter': '-0.025em',
+        'tight': '-0.015em'
       },
       boxShadow: {
-        'subtle': '0 1px 3px 0 rgba(147, 51, 234, 0.04), 0 1px 2px -1px rgba(147, 51, 234, 0.04)',
-        'premium': '0 4px 20px -2px rgba(147, 51, 234, 0.08), 0 2px 6px -2px rgba(147, 51, 234, 0.04)',
-        'elevated': '0 10px 30px -4px rgba(147, 51, 234, 0.12), 0 4px 10px -2px rgba(147, 51, 234, 0.06)'
+        'subtle': '0 1px 2px 0 rgba(15, 23, 42, 0.04)',
+        'sm': '0 2px 8px -2px rgba(15, 23, 42, 0.05), 0 1px 3px 0 rgba(15, 23, 42, 0.02)',
+        'premium': '0 10px 30px -10px rgba(15, 23, 42, 0.05), 0 4px 12px -4px rgba(15, 23, 42, 0.03)',
+        'elevated': '0 20px 40px -12px rgba(15, 23, 42, 0.07), 0 8px 16px -6px rgba(15, 23, 42, 0.03)',
+        'apple': '0 12px 36px -4px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.03)',
+        'glow-sky': '0 0 25px -5px rgba(2, 132, 199, 0.25)',
+        'glow-iris': '0 0 25px -5px rgba(99, 102, 241, 0.25)'
+      },
+      borderRadius: {
+        'xl': '14px',
+        '2xl': '18px',
+        '3xl': '24px',
+        '4xl': '32px'
       }
     },
   },

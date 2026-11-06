@@ -225,10 +225,10 @@ export function AllFilesPage() {
                 next.set('category', cat.id);
                 setSearchParams(next);
               }}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 currentCategory === cat.id
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 border border-surface-200 dark:border-surface-800'
+                  ? 'bg-sky-50 text-sky-700 border border-sky-200/90 shadow-subtle'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200/70'
               }`}
             >
               {cat.label}
@@ -383,25 +383,25 @@ export function AllFilesPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 overflow-hidden shadow-subtle">
+        <div className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden shadow-subtle">
           <table className="w-full text-left">
-            <thead className="bg-surface-50 dark:bg-surface-800/60 border-b border-surface-200 dark:border-surface-800 text-[11px] font-bold uppercase tracking-wider text-surface-400">
+            <thead className="bg-slate-50/80 border-b border-slate-200/70 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               <tr>
-                <th className="w-10 px-4 py-3">
+                <th className="w-10 px-4 py-3.5">
                   <input
                     type="checkbox"
                     checked={selectedFileIds.length === files.length && files.length > 0}
                     onChange={handleSelectAll}
-                    className="w-4 h-4 rounded border-surface-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                    className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
                   />
                 </th>
-                <th className="w-8 px-2 py-3"></th>
-                <th className="px-3 py-3">Name</th>
-                <th className="px-3 py-3 hidden md:table-cell">Category</th>
-                <th className="px-3 py-3">Size</th>
-                <th className="px-3 py-3 hidden lg:table-cell">Folder</th>
-                <th className="px-3 py-3 hidden sm:table-cell">Date</th>
-                <th className="px-3 py-3 text-right">Actions</th>
+                <th className="w-8 px-2 py-3.5"></th>
+                <th className="px-3 py-3.5">Name</th>
+                <th className="px-3 py-3.5 hidden md:table-cell">Category</th>
+                <th className="px-3 py-3.5">Size</th>
+                <th className="px-3 py-3.5 hidden lg:table-cell">Folder</th>
+                <th className="px-3 py-3.5 hidden sm:table-cell">Date</th>
+                <th className="px-3 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -440,40 +440,40 @@ export function AllFilesPage() {
 
       {/* Floating Multi-Selection Action Toolbar */}
       {selectedFileIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-surface-900 text-white dark:bg-white dark:text-surface-900 px-6 py-3 rounded-2xl shadow-elevated flex items-center gap-4 animate-slideIn">
-          <span className="text-xs font-semibold">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-xl border border-slate-200/80 text-slate-800 px-6 py-3 rounded-2xl shadow-apple flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <span className="text-xs font-semibold text-slate-900">
             {selectedFileIds.length} item(s) selected
           </span>
 
-          <div className="h-4 w-[1px] bg-surface-700 dark:bg-surface-300" />
+          <div className="h-4 w-[1px] bg-slate-200" />
 
           <button
             onClick={handleBulkDownload}
-            className="flex items-center gap-1.5 text-xs font-medium hover:text-brand-400 dark:hover:text-brand-600 transition-colors"
+            className="flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:text-sky-600 transition-colors cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download className="w-3.5 h-3.5 text-sky-600" />
             <span>Download ZIP</span>
           </button>
 
           <button
             onClick={() => setMoveModalOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-medium hover:text-brand-400 dark:hover:text-brand-600 transition-colors"
+            className="flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:text-sky-600 transition-colors cursor-pointer"
           >
-            <FolderInput className="w-3.5 h-3.5" />
+            <FolderInput className="w-3.5 h-3.5 text-slate-500" />
             <span>Move</span>
           </button>
 
           <button
             onClick={handleBulkDelete}
-            className="flex items-center gap-1.5 text-xs font-medium text-rose-400 dark:text-rose-600 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-1.5 text-xs font-medium text-rose-600 hover:text-rose-700 transition-colors cursor-pointer"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3.5 h-3.5 text-rose-500" />
             <span>Trash</span>
           </button>
 
           <button
             onClick={() => setSelectedFileIds([])}
-            className="text-xs text-surface-400 hover:text-white dark:hover:text-black ml-2"
+            className="text-xs text-slate-400 hover:text-slate-700 ml-2 cursor-pointer font-medium"
           >
             Clear
           </button>

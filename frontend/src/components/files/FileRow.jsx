@@ -32,10 +32,10 @@ export function FileRow({
 
   return (
     <tr
-      className={`border-b border-surface-200 dark:border-surface-800 transition-colors text-xs ${
+      className={`border-b border-slate-200/60 transition-colors text-xs ${
         isSelected
-          ? 'bg-brand-50/50 dark:bg-brand-950/20'
-          : 'hover:bg-surface-50 dark:hover:bg-surface-800/40'
+          ? 'bg-sky-50/70 text-sky-950 font-medium'
+          : 'hover:bg-slate-50/80'
       }`}
     >
       {/* Checkbox */}
@@ -44,7 +44,7 @@ export function FileRow({
           type="checkbox"
           checked={isSelected}
           onChange={() => onSelect(file.id)}
-          className="w-4 h-4 rounded border-surface-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+          className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
         />
       </td>
 
@@ -54,7 +54,7 @@ export function FileRow({
           type="button"
           onClick={() => onToggleFavorite(file.id)}
           className={`p-1 rounded transition-colors ${
-            file.is_favorite ? 'text-amber-400' : 'text-surface-300 hover:text-amber-400'
+            file.is_favorite ? 'text-amber-400' : 'text-slate-300 hover:text-amber-400'
           }`}
         >
           <Star className={`w-3.5 h-3.5 ${file.is_favorite ? 'fill-amber-400' : ''}`} />
@@ -62,13 +62,13 @@ export function FileRow({
       </td>
 
       {/* Name and Icon */}
-      <td className="px-3 py-3 font-medium text-surface-900 dark:text-surface-100 max-w-xs sm:max-w-md">
+      <td className="px-3 py-3 font-medium text-slate-900 max-w-xs sm:max-w-md">
         <div
           onClick={() => onPreview(file)}
           className="flex items-center space-x-2.5 cursor-pointer group truncate"
         >
           {getFileIcon(file.file_category, file.extension, 'w-5 h-5 flex-shrink-0')}
-          <span className="truncate group-hover:text-brand-600 dark:group-hover:text-brand-400">
+          <span className="truncate group-hover:text-sky-600 transition-colors">
             {file.original_name}
           </span>
         </div>
@@ -133,25 +133,25 @@ export function FileRow({
         {showMenu && (
           <>
             <div className="fixed inset-0 z-20" onClick={() => setShowMenu(false)} />
-            <div className="absolute right-4 mt-1 w-48 max-h-72 overflow-y-auto py-1.5 bg-white dark:bg-surface-900 rounded-2xl shadow-elevated border border-surface-200 dark:border-surface-800 z-50 text-xs text-left animate-scaleUp">
+            <div className="absolute right-4 mt-1 w-48 max-h-72 overflow-y-auto py-1.5 bg-white rounded-2xl shadow-apple border border-slate-200/80 z-50 text-xs text-left animate-in fade-in duration-150">
               <button
                 onClick={() => { setShowMenu(false); onPreview(file); }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-surface-50 dark:hover:bg-surface-800"
+                className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 text-slate-700"
               >
-                <Eye className="w-3.5 h-3.5" /> Preview
+                <Eye className="w-3.5 h-3.5 text-slate-500" /> Preview
               </button>
               <button
                 onClick={() => { setShowMenu(false); window.location.href = `/api/files/${file.id}/download`; }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-surface-50 dark:hover:bg-surface-800"
+                className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 text-slate-700"
               >
-                <Download className="w-3.5 h-3.5" /> Download
+                <Download className="w-3.5 h-3.5 text-slate-500" /> Download
               </button>
               {onShare && (
                 <button
                   onClick={() => { setShowMenu(false); onShare(file); }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-surface-50 dark:hover:bg-surface-800"
+                  className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 text-slate-700"
                 >
-                  <Share2 className="w-3.5 h-3.5" /> Share
+                  <Share2 className="w-3.5 h-3.5 text-slate-500" /> Share Link
                 </button>
               )}
               {onCompare && (
