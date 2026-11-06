@@ -271,50 +271,53 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
       <div className="fixed bottom-6 right-6 z-50">
         <button
           onClick={() => setIsOpen(true)}
-          className="group relative flex items-center gap-3 px-5 py-3.5 rounded-full bg-gradient-to-r from-sky-600 via-sky-600 to-indigo-600 text-white shadow-apple hover:shadow-elevated hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-white/30"
+          className="group relative flex items-center gap-3 px-5 py-3.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white shadow-xl shadow-purple-600/30 hover:shadow-purple-600/50 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-white/20"
         >
-          <span className="relative flex h-2.5 w-2.5">
+          <span className="relative flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400"></span>
           </span>
           <Bot className="w-5 h-5 text-white animate-bounce" style={{ animationDuration: '3s' }} />
-          <span className="font-semibold text-sm tracking-tight">AI Copilot</span>
-          <Sparkles className="w-4 h-4 text-sky-200 group-hover:rotate-12 transition-transform" />
+          <span className="font-bold text-sm tracking-wide">AI Copilot</span>
+          <Sparkles className="w-4 h-4 text-purple-200 group-hover:rotate-12 transition-transform" />
         </button>
       </div>
     );
   }
 
   const containerClasses = standalone
-    ? 'w-full h-full flex flex-col bg-white rounded-3xl border border-slate-200/80 shadow-apple overflow-hidden'
+    ? 'w-full h-full flex flex-col bg-white rounded-3xl border border-surface-200 shadow-xl overflow-hidden'
     : isMaximized
-    ? 'fixed inset-4 sm:inset-10 z-50 flex flex-col bg-white rounded-3xl border border-slate-200/80 shadow-apple overflow-hidden'
-    : 'fixed bottom-6 right-6 z-50 w-[95vw] sm:w-[440px] h-[640px] max-h-[88vh] flex flex-col bg-white rounded-3xl border border-slate-200/80 shadow-apple overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200';
+    ? 'fixed inset-4 sm:inset-10 z-50 flex flex-col bg-white rounded-3xl border border-surface-200 shadow-2xl overflow-hidden'
+    : 'fixed bottom-6 right-6 z-50 w-[95vw] sm:w-[440px] h-[640px] max-h-[88vh] flex flex-col bg-white rounded-3xl border border-surface-200 shadow-2xl shadow-purple-950/15 overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200';
 
   return (
     <>
       <div className={containerClasses}>
         {/* Chatbox Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 bg-white/85 backdrop-blur-xl border-b border-slate-200/70 select-none">
+        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 text-white select-none">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-600 to-indigo-600 text-white flex items-center justify-center shadow-subtle">
+            <div className="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-inner">
               <Bot className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-sm text-slate-900 tracking-tight">MediaVault AI Copilot</h3>
+                <h3 className="font-bold text-sm leading-tight">MediaVault AI Copilot</h3>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
+                  Online
+                </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium leading-tight mt-0.5">
-                Autonomous Enterprise Assistant • Multilingual
+              <p className="text-[11px] text-purple-200/90 leading-tight mt-0.5">
+                English • Tanglish • தமிழ் Voice & Text
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {!standalone && (
               <button
                 onClick={() => setIsMaximized(!isMaximized)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-purple-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 title={isMaximized ? 'Restore size' : 'Maximize'}
               >
                 {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -323,7 +326,7 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
             {!standalone && (
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-purple-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 title="Close chat"
               >
                 <X className="w-4 h-4" />
@@ -334,9 +337,9 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
 
         {/* Attached Active File Bar (if any) */}
         {attachedFile && (
-          <div className="px-4 py-2.5 bg-sky-50/70 border-b border-sky-100/80 flex items-center justify-between gap-3 text-xs">
+          <div className="px-4 py-2.5 bg-purple-50/80 border-b border-purple-100 flex items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0 overflow-hidden">
+              <div className="w-7 h-7 rounded-lg bg-purple-200 text-purple-700 flex items-center justify-center shrink-0 overflow-hidden">
                 {attachedFile.previewUrl && attachedFile.name.match(/\.(jpg|jpeg|png|webp)$/i) ? (
                   <img src={attachedFile.previewUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -344,15 +347,15 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
                 )}
               </div>
               <div className="min-w-0 truncate">
-                <p className="font-semibold text-slate-900 truncate leading-tight">{attachedFile.name}</p>
-                <p className="text-[10px] text-sky-600 font-medium leading-tight">
+                <p className="font-bold text-purple-950 truncate leading-tight">{attachedFile.name}</p>
+                <p className="text-[10px] text-purple-600 leading-tight">
                   {attachedFile.size ? formatBytes(attachedFile.size) : 'Ready'} • Active for next command
                 </p>
               </div>
             </div>
             <button
               onClick={removeAttachment}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-sky-100 transition-colors cursor-pointer"
+              className="p-1 rounded-md text-purple-400 hover:text-purple-700 hover:bg-purple-200/50 transition-colors cursor-pointer"
               title="Remove attachment"
             >
               <X className="w-3.5 h-3.5" />
@@ -361,7 +364,7 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
         )}
 
         {/* Message Feed Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#F9F9FB]/80">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-surface-50/60">
           {messages.map((m) => {
             const isUser = m.sender === 'user';
             return (
@@ -370,7 +373,7 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
                 className={`flex gap-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}
               >
                 {!isUser && (
-                  <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-sky-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-subtle mt-0.5">
+                  <div className="w-7 h-7 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
                     <Sparkles className="w-3.5 h-3.5" />
                   </div>
                 )}
@@ -378,12 +381,12 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
                 <div className={`max-w-[85%] space-y-2 ${isUser ? 'items-end' : 'items-start'}`}>
                   {/* Message Bubble */}
                   <div
-                    className={`p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                    className={`p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm ${
                       isUser
-                        ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white rounded-br-none shadow-subtle'
+                        ? 'bg-purple-600 text-white rounded-br-none'
                         : m.isError
-                        ? 'bg-rose-50 text-rose-800 border border-rose-200/80 rounded-bl-none'
-                        : 'bg-white text-slate-800 border border-slate-200/80 rounded-bl-none shadow-subtle'
+                        ? 'bg-red-50 text-red-700 border border-red-200 rounded-bl-none'
+                        : 'bg-white text-surface-900 border border-surface-200/80 rounded-bl-none'
                     }`}
                   >
                     {/* User attachment pill */}
@@ -404,72 +407,72 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
 
                     {/* Assistant Result Card (if operation generated output) */}
                     {!isUser && m.previewUrl && (
-                      <div className="mt-3 p-3 bg-white rounded-2xl border border-slate-200/80 shadow-subtle space-y-2.5">
-                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
-                          <span className="flex items-center gap-1.5 text-sky-700">
+                      <div className="mt-3 p-3 bg-surface-50 rounded-xl border border-surface-200 space-y-2.5">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-surface-700">
+                          <span className="flex items-center gap-1.5 text-purple-700">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                             {m.operation || 'Result Output'}
                           </span>
-                          {m.size && <span className="text-slate-500 font-normal">{formatBytes(m.size)}</span>}
+                          {m.size && <span className="text-surface-500">{formatBytes(m.size)}</span>}
                         </div>
 
                         {/* Visual Media Preview */}
                         {m.outExt && ['webp', 'png', 'jpg', 'jpeg', 'gif'].includes(m.outExt.toLowerCase()) ? (
-                          <div className="p-3 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:10px_10px] rounded-xl border border-slate-200/60 flex items-center justify-center min-h-[140px] max-h-[220px]">
+                          <div className="p-3 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:10px_10px] rounded-lg border border-surface-200 flex items-center justify-center min-h-[140px] max-h-[220px]">
                             <img
                               src={m.previewUrl}
                               alt="Output Preview"
-                              className="max-h-[200px] max-w-full object-contain rounded-lg drop-shadow-sm"
+                              className="max-h-[200px] max-w-full object-contain rounded-md drop-shadow-md"
                             />
                           </div>
                         ) : m.outExt && ['mp4', 'mov', 'webm'].includes(m.outExt.toLowerCase()) ? (
-                          <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/70 space-y-2">
+                          <div className="p-3 bg-white rounded-lg border border-purple-200 space-y-2">
                             <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                              <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
                                 <Film className="w-4 h-4" />
                               </div>
                               <div className="min-w-0">
-                                <p className="font-semibold text-xs text-slate-900 truncate">{m.outFilename}</p>
-                                <p className="text-[10px] text-slate-500 uppercase">{m.outExt} Video Stream</p>
+                                <p className="font-bold text-xs text-surface-900 truncate">{m.outFilename}</p>
+                                <p className="text-[10px] text-surface-500 uppercase">{m.outExt} Video Stream</p>
                               </div>
                             </div>
                             <video controls src={m.previewUrl || m.downloadUrl} className="w-full max-h-56 rounded-lg bg-black" />
                           </div>
                         ) : m.outExt && ['mp3', 'wav', 'ogg', 'aac'].includes(m.outExt.toLowerCase()) ? (
-                          <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/70 space-y-2">
+                          <div className="p-3 bg-white rounded-lg border border-purple-200 space-y-2">
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                                 <Volume2 className="w-4 h-4" />
                               </div>
                               <div className="min-w-0">
-                                <p className="font-semibold text-xs text-slate-900 truncate">{m.outFilename}</p>
-                                <p className="text-[10px] text-slate-500 uppercase">Spoken MP3 Audio Narration</p>
+                                <p className="font-bold text-xs text-surface-900 truncate">{m.outFilename}</p>
+                                <p className="text-[10px] text-surface-500 uppercase">Spoken MP3 Audio Narration</p>
                               </div>
                             </div>
                             <audio controls src={m.previewUrl || m.downloadUrl} className="w-full h-8 rounded" />
                           </div>
                         ) : m.outExt && ['zip', 'rar', 'tar', 'gz'].includes(m.outExt.toLowerCase()) ? (
-                          <div className="p-3 bg-slate-50/80 rounded-xl border border-amber-200/70 flex items-center gap-3">
+                          <div className="p-3 bg-white rounded-lg border border-amber-200 flex items-center gap-3">
                             <Archive className="w-8 h-8 text-amber-600" />
                             <div className="min-w-0">
-                              <p className="font-semibold text-xs text-slate-900 truncate">{m.outFilename}</p>
-                              <p className="text-[10px] text-slate-500 uppercase">Compressed ZIP Archive</p>
+                              <p className="font-bold text-xs text-surface-900 truncate">{m.outFilename}</p>
+                              <p className="text-[10px] text-surface-500 uppercase">Compressed ZIP Archive</p>
                             </div>
                           </div>
                         ) : m.outExt && ['xlsx', 'xls', 'csv'].includes(m.outExt.toLowerCase()) ? (
-                          <div className="p-3 bg-slate-50/80 rounded-xl border border-emerald-200/70 flex items-center gap-3">
+                          <div className="p-3 bg-white rounded-lg border border-emerald-200 flex items-center gap-3">
                             <FileSpreadsheet className="w-8 h-8 text-emerald-600" />
                             <div className="min-w-0">
-                              <p className="font-semibold text-xs text-slate-900 truncate">{m.outFilename}</p>
-                              <p className="text-[10px] text-slate-500 uppercase">{m.outExt} Spreadsheet</p>
+                              <p className="font-bold text-xs text-surface-900 truncate">{m.outFilename}</p>
+                              <p className="text-[10px] text-surface-500 uppercase">{m.outExt} Spreadsheet</p>
                             </div>
                           </div>
                         ) : (
-                          <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/70 flex items-center gap-3">
-                            <FileText className="w-8 h-8 text-sky-600" />
+                          <div className="p-3 bg-white rounded-lg border border-surface-200 flex items-center gap-3">
+                            <FileText className="w-8 h-8 text-purple-600" />
                             <div className="min-w-0">
-                              <p className="font-semibold text-xs text-slate-900 truncate">{m.outFilename}</p>
-                              <p className="text-[10px] text-slate-500 uppercase">{m.outExt} Document</p>
+                              <p className="font-bold text-xs text-surface-900 truncate">{m.outFilename}</p>
+                              <p className="text-[10px] text-surface-500 uppercase">{m.outExt} Document</p>
                             </div>
                           </div>
                         )}
@@ -480,7 +483,7 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
                             <a
                               href={m.downloadUrl}
                               download
-                              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs transition-all shadow-subtle active:scale-97 cursor-pointer"
+                              className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-colors shadow-sm cursor-pointer"
                             >
                               <Download className="w-3.5 h-3.5" />
                               Download File
@@ -491,7 +494,7 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
                     )}
                   </div>
 
-                  <span className="text-[10px] text-slate-400 px-1">{m.timestamp}</span>
+                  <span className="text-[10px] text-surface-400 px-1">{m.timestamp}</span>
                 </div>
               </div>
             );
@@ -499,9 +502,9 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
 
           {/* Typing / Processing Indicator */}
           {isProcessing && (
-            <div className="flex items-center gap-2 text-xs text-sky-700 bg-sky-50/90 p-3 rounded-2xl border border-sky-100 w-fit shadow-subtle">
-              <Loader2 className="w-4 h-4 animate-spin text-sky-600" />
-              <span className="font-medium">Processing instruction & editing file...</span>
+            <div className="flex items-center gap-2 text-xs text-purple-600 bg-purple-50/80 p-3 rounded-2xl border border-purple-100 w-fit">
+              <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+              <span className="font-semibold">Processing instruction & editing file...</span>
             </div>
           )}
 
@@ -509,13 +512,13 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
         </div>
 
         {/* Quick Suggestion Chips */}
-        <div className="px-3 py-2 bg-white/95 border-t border-slate-200/60 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+        <div className="px-3 py-2 bg-white border-t border-surface-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {QUICK_ACTIONS.map((qa, i) => (
             <button
               key={i}
               onClick={() => handleSendMessage(qa.prompt)}
               disabled={isProcessing}
-              className="shrink-0 text-[11px] font-medium px-2.5 py-1 rounded-full bg-slate-100/80 hover:bg-sky-50 hover:text-sky-700 hover:border-sky-200 text-slate-700 border border-slate-200/70 transition-all cursor-pointer whitespace-nowrap"
+              className="shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-surface-100 hover:bg-purple-50 hover:text-purple-700 text-surface-700 border border-surface-200 transition-all cursor-pointer whitespace-nowrap"
             >
               {qa.label}
             </button>
@@ -523,8 +526,8 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
         </div>
 
         {/* Input Bar */}
-        <div className="p-3 bg-white border-t border-slate-200/60">
-          <div className="flex items-end gap-2 bg-slate-50/90 rounded-2xl p-2 border border-slate-200/80 focus-within:bg-white focus-within:border-sky-500 focus-within:ring-4 focus-within:ring-sky-500/10 transition-all">
+        <div className="p-3 bg-white border-t border-surface-200">
+          <div className="flex items-end gap-2 bg-surface-50 rounded-2xl p-2 border border-surface-200 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
             {/* Attachment buttons */}
             <div className="flex items-center gap-1 pb-1">
               <input
@@ -537,7 +540,7 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="p-1.5 rounded-xl text-slate-500 hover:text-sky-600 hover:bg-sky-50 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl text-surface-500 hover:text-purple-600 hover:bg-purple-50 transition-colors cursor-pointer"
                 title="Attach file from computer"
               >
                 <Paperclip className="w-4 h-4" />
@@ -545,7 +548,7 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
               <button
                 type="button"
                 onClick={handleOpenVaultPicker}
-                className="p-1.5 rounded-xl text-slate-500 hover:text-sky-600 hover:bg-sky-50 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl text-surface-500 hover:text-purple-600 hover:bg-purple-50 transition-colors cursor-pointer"
                 title="Select from MediaVault"
               >
                 <FolderOpen className="w-4 h-4" />
@@ -557,9 +560,9 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="e.g. 'Resume ready pannu PDF-la', 'Project report Word-la create pannu'..."
+              placeholder="ChatGPT mathiri: 'Resume ready pannu PDF-la', 'Project report Word-la create pannu', 'Budget sheet Excel-la kudu'..."
               rows={1}
-              className="flex-1 bg-transparent text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none resize-none max-h-24 py-1.5"
+              className="flex-1 bg-transparent text-xs sm:text-sm text-surface-900 placeholder:text-surface-400 focus:outline-none resize-none max-h-24 py-1.5"
             />
 
             {/* Send button */}
@@ -567,7 +570,7 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
               type="button"
               onClick={() => handleSendMessage()}
               disabled={isProcessing || (!inputMessage.trim() && !attachedFile)}
-              className="p-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 disabled:opacity-40 text-white transition-all shadow-subtle active:scale-95 cursor-pointer shrink-0"
+              className="p-2 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:hover:bg-purple-600 text-white transition-all shadow-md shadow-purple-600/20 cursor-pointer shrink-0"
             >
               {isProcessing ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -581,33 +584,31 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
 
       {/* Select from Vault Modal */}
       {vaultModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[80vh] flex flex-col shadow-apple border border-slate-200/80 overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/60">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
-                  <FolderOpen className="w-4 h-4" />
-                </div>
-                <h3 className="font-bold text-base text-slate-900">Select File from MediaVault</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-950/50 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[80vh] flex flex-col shadow-2xl border border-surface-200 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-surface-200">
+              <div className="flex items-center gap-2">
+                <FolderOpen className="w-5 h-5 text-purple-600" />
+                <h3 className="font-bold text-base text-surface-900">Select File from MediaVault</h3>
               </div>
               <button
                 onClick={() => setVaultModalOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl text-surface-400 hover:text-surface-700 hover:bg-surface-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Filter categories */}
-            <div className="flex items-center gap-2 px-6 py-2.5 bg-slate-50/70 border-b border-slate-200/60 overflow-x-auto text-xs">
+            <div className="flex items-center gap-2 px-6 py-2.5 bg-surface-50 border-b border-surface-200 overflow-x-auto text-xs">
               {['all', 'photos', 'documents'].map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setVaultCategory(cat)}
-                  className={`px-3 py-1 rounded-full font-medium capitalize transition-all cursor-pointer ${
+                  className={`px-3 py-1 rounded-full font-bold capitalize transition-all cursor-pointer ${
                     vaultCategory === cat
-                      ? 'bg-sky-50 text-sky-700 border border-sky-200 font-semibold shadow-subtle'
-                      : 'bg-white text-slate-600 border border-slate-200/60 hover:bg-slate-50'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'bg-white text-surface-600 hover:bg-surface-100'
                   }`}
                 >
                   {cat}
@@ -618,12 +619,12 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
             {/* Files List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
               {vaultLoading ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-2 text-slate-400">
-                  <Loader2 className="w-6 h-6 animate-spin text-sky-600" />
+                <div className="flex flex-col items-center justify-center py-12 gap-2 text-surface-400">
+                  <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
                   <span className="text-xs font-semibold">Loading your vault files...</span>
                 </div>
               ) : vaultFiles.length === 0 ? (
-                <div className="text-center py-12 text-slate-400 text-xs">
+                <div className="text-center py-12 text-surface-400 text-xs">
                   No files found in MediaVault. Upload one to get started!
                 </div>
               ) : (
@@ -637,28 +638,28 @@ export function AICopilotChatbox({ initialOpen = false, standalone = false }) {
                     <div
                       key={f.id}
                       onClick={() => handleSelectVaultFile(f)}
-                      className="flex items-center justify-between p-3 rounded-2xl border border-slate-200/70 hover:border-sky-300 hover:bg-sky-50/40 transition-all cursor-pointer group"
+                      className="flex items-center justify-between p-3 rounded-2xl border border-surface-200 hover:border-purple-300 hover:bg-purple-50/50 transition-all cursor-pointer group"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
                           {f.file_category === 'photos' ? (
-                            <ImageIcon className="w-4 h-4 text-sky-600" />
+                            <ImageIcon className="w-4 h-4" />
                           ) : f.original_name.endsWith('.pdf') ? (
-                            <FileText className="w-4 h-4 text-rose-500" />
+                            <FileText className="w-4 h-4 text-red-500" />
                           ) : (
                             <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-semibold text-xs text-slate-900 group-hover:text-sky-700 truncate">
+                          <p className="font-bold text-xs text-surface-900 group-hover:text-purple-700 truncate">
                             {f.original_name}
                           </p>
-                          <p className="text-[10px] text-slate-400">
+                          <p className="text-[10px] text-surface-400">
                             {formatBytes(f.file_size)} • {f.extension?.toUpperCase() || 'FILE'}
                           </p>
                         </div>
                       </div>
-                      <span className="text-[11px] font-semibold text-sky-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[11px] font-bold text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity">
                         Select →
                       </span>
                     </div>

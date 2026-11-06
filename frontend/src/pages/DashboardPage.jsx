@@ -14,9 +14,7 @@ import {
   UploadCloud,
   Wand2,
   Activity,
-  Plus,
-  ShieldCheck,
-  Sparkles
+  Plus
 } from 'lucide-react';
 import api from '../services/api';
 import { formatBytes, formatDate, formatDateTime, getFileIcon } from '../utils/formatters';
@@ -45,9 +43,9 @@ export function DashboardPage() {
       const res = await api.get('/dashboard/stats');
       if (res.data.success) {
         setStats(res.data.stats);
-        setRecentUploaded(res.data.recentUploaded || []);
-        setFavoriteFiles(res.data.favoriteFiles || []);
-        setRecentActivities(res.data.recentActivities || []);
+        setRecentUploaded(res.data.recentUploaded);
+        setFavoriteFiles(res.data.favoriteFiles);
+        setRecentActivities(res.data.recentActivities);
       }
     } catch (err) {
       console.error('Failed to load dashboard:', err);
@@ -73,27 +71,22 @@ export function DashboardPage() {
   }
 
   const storageUsed = stats?.storageUsed || 0;
-  const storageLimit = stats?.storageLimit || 53687091200;
+  const storageLimit = stats?.storageLimit || 10737418240;
   const usagePercentage = stats?.usagePercentage || 0;
   const breakdown = stats?.storageBreakdown || {};
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Top Luminous Launch Hero - Apple-Grade Light SaaS Aesthetic */}
-      <div className="relative rounded-3xl p-7 sm:p-9 bg-gradient-to-br from-white via-sky-50/40 to-indigo-50/30 border border-slate-200/80 shadow-sm backdrop-blur-xl overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-        {/* Soft Ambient Radial Accents */}
-        <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-sky-200/25 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-indigo-200/20 blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 space-y-2.5 max-w-xl">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/90 border border-slate-200/70 shadow-xs text-xs font-semibold text-slate-700">
-            <ShieldCheck className="w-3.5 h-3.5 text-sky-600" />
-            <span>Secure Hardline Enterprise DAM</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tighter text-slate-900">
+    <div className="space-y-8">
+      {/* Top Banner & Quick Tool Launcher */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-purple-700 via-purple-800 to-violet-900 rounded-3xl p-6 sm:p-8 text-white shadow-elevated relative overflow-hidden">
+        <div className="relative z-10 space-y-2 max-w-xl">
+          <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-xs font-semibold backdrop-blur-sm">
+            Digital Asset Hub
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             Welcome to MediaVault
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+          <p className="text-xs sm:text-sm text-purple-100 leading-relaxed">
             All your photos, documents, and digital media in one unified, cryptographically verified storage workspace.
           </p>
         </div>
@@ -101,133 +94,136 @@ export function DashboardPage() {
         <div className="relative z-10 flex flex-wrap items-center gap-2.5">
           <Link
             to="/photo-toolkit"
-            className="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-800 rounded-xl text-xs sm:text-sm font-medium border border-slate-200/80 shadow-subtle transition-all flex items-center gap-2 active:scale-95"
+            className="px-4 py-2.5 bg-white hover:bg-purple-50 text-purple-950 rounded-xl text-xs sm:text-sm font-semibold shadow-subtle transition-all flex items-center gap-2"
           >
-            <Image className="w-4 h-4 text-sky-600" />
+            <Image className="w-4 h-4 text-purple-600" />
             <span>Photo Toolkit</span>
           </Link>
           <Link
             to="/pdf-tools"
-            className="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-800 rounded-xl text-xs sm:text-sm font-medium border border-slate-200/80 shadow-subtle transition-all flex items-center gap-2 active:scale-95"
+            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-xs sm:text-sm font-semibold backdrop-blur-sm transition-all flex items-center gap-2"
           >
-            <Layers className="w-4 h-4 text-indigo-600" />
+            <Layers className="w-4 h-4" />
             <span>PDF Tools</span>
           </Link>
           <Link
             to="/duplicates"
-            className="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-800 rounded-xl text-xs sm:text-sm font-medium border border-slate-200/80 shadow-subtle transition-all flex items-center gap-2 active:scale-95"
+            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-xs sm:text-sm font-semibold backdrop-blur-sm transition-all flex items-center gap-2"
           >
-            <Copy className="w-4 h-4 text-slate-600" />
+            <Copy className="w-4 h-4" />
             <span>Scan Duplicates</span>
           </Link>
         </div>
+
+        {/* Decorative background circle */}
+        <div className="absolute -right-10 -bottom-10 w-64 h-64 rounded-full bg-white/5 pointer-events-none" />
       </div>
 
-      {/* Main Metric Cards - Rounded 2xl with Diffused Occlusion Shadows */}
+      {/* Main Metric Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Storage Card */}
-        <div className="p-5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/70 shadow-subtle hover:shadow-premium transition-all duration-200 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Storage Used</span>
-            <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100/70">
+        {/* Total Storage */}
+        <div className="p-5 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-premium flex flex-col justify-between">
+          <div className="flex items-center justify-between text-surface-400">
+            <span className="text-xs font-bold uppercase tracking-wider">Storage Used</span>
+            <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center">
               <HardDrive className="w-4 h-4" />
             </div>
           </div>
           <div className="my-3">
-            <span className="text-2xl font-bold tracking-tight text-slate-900">
+            <span className="text-2xl font-extrabold text-surface-900 dark:text-surface-100">
               {formatBytes(storageUsed)}
             </span>
-            <span className="text-xs text-slate-400 ml-1">/ {formatBytes(storageLimit)}</span>
+            <span className="text-xs text-surface-400 ml-1">/ {formatBytes(storageLimit)}</span>
           </div>
-          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+          <div className="w-full bg-surface-100 dark:bg-surface-800 h-2 rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                usagePercentage > 90 ? 'bg-rose-500' : usagePercentage > 75 ? 'bg-amber-500' : 'bg-gradient-to-r from-sky-500 to-indigo-500'
+              className={`h-full rounded-full ${
+                usagePercentage > 90 ? 'bg-rose-500' : usagePercentage > 75 ? 'bg-amber-500' : 'bg-brand-500'
               }`}
-              style={{ width: `${Math.min(100, Math.max(storageUsed > 0 ? 2 : 0, usagePercentage))}%` }}
+              style={{ width: `${Math.min(100, usagePercentage)}%` }}
             />
           </div>
         </div>
 
-        {/* Total Photos Card */}
-        <div className="p-5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/70 shadow-subtle hover:shadow-premium transition-all duration-200 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Photos</span>
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100/70">
+        {/* Total Photos */}
+        <div className="p-5 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-premium flex flex-col justify-between">
+          <div className="flex items-center justify-between text-surface-400">
+            <span className="text-xs font-bold uppercase tracking-wider">Photos</span>
+            <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
               <Image className="w-4 h-4" />
             </div>
           </div>
           <div className="my-3">
-            <span className="text-2xl font-bold tracking-tight text-slate-900">
+            <span className="text-2xl font-extrabold text-surface-900 dark:text-surface-100">
               {stats?.totalPhotos || 0}
             </span>
-            <span className="text-xs text-slate-400 ml-1">images ({formatBytes(breakdown.photos || 0)})</span>
+            <span className="text-xs text-surface-400 ml-1">images ({formatBytes(breakdown.photos || 0)})</span>
           </div>
-          <Link to="/files?category=photos" className="text-xs font-medium text-sky-600 hover:text-sky-700 flex items-center gap-1">
+          <Link to="/files?category=photos" className="text-xs font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-1 hover:underline">
             <span>View Photos</span> <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
         {/* Total Documents & PDFs */}
-        <div className="p-5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/70 shadow-subtle hover:shadow-premium transition-all duration-200 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Documents & PDFs</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100/70">
+        <div className="p-5 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-premium flex flex-col justify-between">
+          <div className="flex items-center justify-between text-surface-400">
+            <span className="text-xs font-bold uppercase tracking-wider">Documents & PDFs</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <FileText className="w-4 h-4" />
             </div>
           </div>
           <div className="my-3">
-            <span className="text-2xl font-bold tracking-tight text-slate-900">
+            <span className="text-2xl font-extrabold text-surface-900 dark:text-surface-100">
               {(stats?.totalDocuments || 0) + (stats?.totalPdfs || 0)}
             </span>
-            <span className="text-xs text-slate-400 ml-1">docs</span>
+            <span className="text-xs text-surface-400 ml-1">docs</span>
           </div>
-          <Link to="/files?category=documents" className="text-xs font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+          <Link to="/files?category=documents" className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 hover:underline">
             <span>Explore Docs</span> <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        {/* Duplicate Files Alert Card */}
-        <div className="p-5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/70 shadow-subtle hover:shadow-premium transition-all duration-200 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Duplicate Files</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100/70">
+        {/* Duplicates Alert */}
+        <div className="p-5 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-premium flex flex-col justify-between">
+          <div className="flex items-center justify-between text-surface-400">
+            <span className="text-xs font-bold uppercase tracking-wider">Duplicate Files</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <Copy className="w-4 h-4" />
             </div>
           </div>
           <div className="my-3">
-            <span className="text-2xl font-bold tracking-tight text-slate-900">
+            <span className="text-2xl font-extrabold text-surface-900 dark:text-surface-100">
               {stats?.duplicateFiles || 0}
             </span>
-            <span className="text-xs text-slate-400 ml-1">redundant copies</span>
+            <span className="text-xs text-surface-400 ml-1">redundant copies</span>
           </div>
-          <Link to="/duplicates" className="text-xs font-medium text-amber-600 hover:text-amber-700 flex items-center gap-1">
+          <Link to="/duplicates" className="text-xs font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1 hover:underline">
             <span>Review Duplicates</span> <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       </div>
 
-      {/* Storage Breakdown Multi-segment Bar Card */}
-      <div className="p-6 rounded-2xl bg-white border border-slate-200/70 shadow-subtle space-y-4">
+      {/* Storage Breakdown Visual Bar */}
+      <div className="p-6 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-premium space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">
+            <h3 className="text-sm font-bold text-surface-900 dark:text-surface-100">
               Storage Distribution by Asset Class
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-surface-400">
               Real-time consumption calculated from PostgreSQL database
             </p>
           </div>
           <Link
             to="/analytics"
-            className="text-xs font-medium text-sky-600 hover:text-sky-700 flex items-center gap-1"
+            className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1"
           >
             <span>Full Analytics</span> <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
         {/* Multi-segment Progress Bar */}
-        <div className="w-full h-2 rounded-full bg-slate-100 flex overflow-hidden">
+        <div className="w-full h-3 rounded-full bg-surface-100 dark:bg-surface-800 flex overflow-hidden">
           {storageUsed > 0 ? (
             <>
               <div
@@ -247,7 +243,7 @@ export function DashboardPage() {
               />
               <div
                 style={{ width: `${((breakdown.videos || 0) / storageUsed) * 100}%` }}
-                className="bg-indigo-500 h-full"
+                className="bg-purple-500 h-full"
                 title={`Videos: ${formatBytes(breakdown.videos || 0)}`}
               />
               <div
@@ -257,30 +253,30 @@ export function DashboardPage() {
               />
             </>
           ) : (
-            <div className="w-full bg-slate-200 h-full" />
+            <div className="w-full bg-surface-200 dark:bg-surface-800 h-full" />
           )}
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-600 pt-1">
+        <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-surface-600 dark:text-surface-400 pt-1">
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-sky-500" />
+            <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
             <span>Photos ({formatBytes(breakdown.photos || 0)})</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
             <span>Docs ({formatBytes(breakdown.documents || 0)})</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-rose-500" />
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
             <span>PDFs ({formatBytes(breakdown.pdfs || 0)})</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-indigo-500" />
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
             <span>Videos ({formatBytes(breakdown.videos || 0)})</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
             <span>Archives ({formatBytes(breakdown.archives || 0)})</span>
           </div>
         </div>
@@ -291,20 +287,20 @@ export function DashboardPage() {
         {/* Left 2 Cols: Recently Uploaded Files */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-sky-600" />
+            <h3 className="text-base font-bold text-surface-900 dark:text-surface-100 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-brand-500" />
               <span>Recently Uploaded Assets</span>
             </h3>
             <Link
               to="/files"
-              className="text-xs font-medium text-sky-600 hover:text-sky-700"
+              className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline"
             >
               View all
             </Link>
           </div>
 
           {recentUploaded.length === 0 ? (
-            <div className="p-8 rounded-2xl border border-dashed border-slate-200 bg-white/50 text-center text-xs text-slate-400">
+            <div className="p-8 rounded-3xl border border-dashed border-surface-300 dark:border-surface-800 text-center text-xs text-surface-400">
               No files uploaded yet. Use the upload button above to add assets.
             </div>
           ) : (
@@ -315,24 +311,24 @@ export function DashboardPage() {
                   <div
                     key={file.id}
                     onClick={() => setPreviewFile(file)}
-                    className="p-3 rounded-2xl bg-white border border-slate-200/70 hover:border-sky-300 shadow-subtle hover:shadow-premium transition-all duration-200 cursor-pointer group flex flex-col justify-between"
+                    className="p-3 rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 hover:border-brand-500/50 shadow-subtle hover:shadow-premium transition-all cursor-pointer group flex flex-col justify-between"
                   >
-                    <div className="h-28 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden mb-2.5 border border-slate-100">
+                    <div className="h-28 rounded-xl bg-surface-50 dark:bg-surface-800 flex items-center justify-center overflow-hidden mb-2.5">
                       {isImg ? (
                         <img
                           src={`/api/files/${file.id}/preview`}
                           alt={file.original_name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                       ) : (
                         getFileIcon(file.file_category, file.extension, 'w-8 h-8')
                       )}
                     </div>
                     <div>
-                      <h4 className="text-xs font-medium text-slate-900 truncate group-hover:text-sky-600">
+                      <h4 className="text-xs font-semibold text-surface-900 dark:text-surface-100 truncate group-hover:text-brand-600">
                         {file.original_name}
                       </h4>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-surface-400 mt-0.5">
                         {formatBytes(file.file_size)} • {formatDate(file.created_at)}
                       </p>
                     </div>
@@ -346,25 +342,25 @@ export function DashboardPage() {
         {/* Right Col: Recent Activity Timeline */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+            <h3 className="text-base font-bold text-surface-900 dark:text-surface-100 flex items-center gap-2">
               <Activity className="w-4 h-4 text-emerald-500" />
               <span>Activity Stream</span>
             </h3>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white border border-slate-200/70 shadow-subtle">
+          <div className="p-5 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-premium">
             {recentActivities.length === 0 ? (
-              <p className="text-xs text-slate-400 text-center py-6">No recent actions logged.</p>
+              <p className="text-xs text-surface-400 text-center py-6">No recent actions logged.</p>
             ) : (
               <div className="space-y-3.5">
                 {recentActivities.map(act => (
                   <div key={act.id} className="flex items-start space-x-3 text-xs">
-                    <div className="w-2 h-2 rounded-full bg-sky-500 mt-1.5 flex-shrink-0" />
+                    <div className="w-2 h-2 rounded-full bg-brand-500 mt-1.5 flex-shrink-0" />
                     <div className="flex-1 truncate">
-                      <p className="text-slate-800 font-medium capitalize truncate">
-                        {act.action} <span className="text-slate-400 font-normal">({act.target_type})</span>
+                      <p className="text-surface-800 dark:text-surface-200 font-medium capitalize">
+                        {act.action} <span className="text-surface-500 font-normal">({act.target_type})</span>
                       </p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">
+                      <p className="text-[10px] text-surface-400">
                         {formatDateTime(act.created_at)}
                       </p>
                     </div>
@@ -406,3 +402,4 @@ export function DashboardPage() {
     </div>
   );
 }
+

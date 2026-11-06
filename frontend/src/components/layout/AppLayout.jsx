@@ -13,7 +13,7 @@ export function AppLayout() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [newFolderModalOpen, setNewFolderModalOpen] = useState(false);
   const [folderName, setFolderName] = useState('');
-  const [folderColor, setFolderColor] = useState('#0284C7');
+  const [folderColor, setFolderColor] = useState('#0c87eb');
   const [creatingFolder, setCreatingFolder] = useState(false);
   const { addToast } = useToast();
 
@@ -42,7 +42,7 @@ export function AppLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F9FB] text-slate-900 flex antialiased">
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-950 flex">
       {/* Sidebar navigation */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
@@ -54,7 +54,7 @@ export function AppLayout() {
           onOpenNewFolder={() => setNewFolderModalOpen(true)}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full transition-all">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
           <Outlet />
         </main>
       </div>
@@ -77,7 +77,7 @@ export function AppLayout() {
       >
         <form onSubmit={handleCreateFolder} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider mb-1.5">
               Folder Name
             </label>
             <input
@@ -85,33 +85,33 @@ export function AppLayout() {
               placeholder="e.g. Design Deliverables, Tax 2026"
               value={folderName}
               onChange={(e) => setFolderName(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all duration-200"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 text-sm focus:outline-none focus:border-brand-500"
               autoFocus
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider mb-2">
               Color Tag
             </label>
             <div className="flex items-center gap-2">
               {[
-                '#0284C7',
-                '#6366F1',
-                '#10B981',
-                '#F59E0B',
-                '#EF4444',
-                '#EC4899',
-                '#06B6D4',
-                '#64748B'
+                '#0c87eb',
+                '#10b981',
+                '#8b5cf6',
+                '#f59e0b',
+                '#ef4444',
+                '#ec4899',
+                '#06b6d4',
+                '#64748b'
               ].map((c) => (
                 <button
                   type="button"
                   key={c}
                   onClick={() => setFolderColor(c)}
-                  className={`w-7 h-7 rounded-full transition-transform cursor-pointer ${
-                    folderColor === c ? 'scale-125 ring-2 ring-offset-2 ring-sky-500' : 'hover:scale-110'
+                  className={`w-7 h-7 rounded-full transition-transform ${
+                    folderColor === c ? 'scale-125 ring-2 ring-offset-2 ring-brand-500' : 'hover:scale-110'
                   }`}
                   style={{ backgroundColor: c }}
                 />
@@ -119,18 +119,18 @@ export function AppLayout() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-surface-100 dark:border-surface-800">
             <button
               type="button"
               onClick={() => setNewFolderModalOpen(false)}
-              className="px-4 py-2 text-xs sm:text-sm font-medium rounded-xl text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs sm:text-sm font-medium rounded-xl text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={creatingFolder || !folderName.trim()}
-              className="px-4 py-2 text-xs sm:text-sm font-medium rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white transition-all shadow-sm shadow-sky-600/20 active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="px-4 py-2 text-xs sm:text-sm font-medium rounded-xl bg-brand-600 hover:bg-brand-700 text-white transition-colors disabled:opacity-50"
             >
               {creatingFolder ? 'Creating...' : 'Create Folder'}
             </button>
@@ -143,3 +143,4 @@ export function AppLayout() {
     </div>
   );
 }
+

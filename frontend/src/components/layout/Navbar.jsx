@@ -12,6 +12,7 @@ import {
   Sun,
   Moon,
   Download,
+  Wifi,
   WifiOff
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -39,45 +40,45 @@ export function Navbar({ onOpenSidebar, onOpenUpload, onOpenNewFolder }) {
   };
 
   return (
-    <header className="h-16 px-4 sm:px-6 bg-white/75 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-30 flex items-center justify-between gap-4 transition-all">
+    <header className="h-16 px-4 sm:px-6 bg-white/80 dark:bg-surface-900/80 backdrop-blur-md border-b border-surface-200 dark:border-surface-800 sticky top-0 z-30 flex items-center justify-between gap-4">
       <div className="flex items-center gap-3">
         {/* Mobile menu trigger */}
         <button
           onClick={onOpenSidebar}
-          className="p-2 rounded-xl text-slate-600 hover:bg-slate-100/80 lg:hidden transition-colors"
+          className="p-2 rounded-xl text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 lg:hidden"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Global Apple-Grade Smart Search Bar */}
+        {/* Global Smart Search Bar */}
         <form onSubmit={handleSearchSubmit} className="relative w-64 sm:w-80 md:w-96">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
           <input
             type="text"
             placeholder="Search files, photos, PDFs, docs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-100/70 border border-slate-200/60 focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none transition-all duration-200"
+            className="w-full pl-9 pr-4 py-2 bg-surface-100 dark:bg-surface-800/70 border border-transparent focus:border-brand-500 rounded-xl text-xs sm:text-sm text-surface-900 dark:text-surface-100 placeholder-surface-400 focus:outline-none transition-all"
           />
         </form>
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* New Folder Button - Secondary Clean White Card */}
+        {/* New Folder Button */}
         {onOpenNewFolder && (
           <button
             onClick={onOpenNewFolder}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200/70 bg-white text-slate-700 text-xs sm:text-sm font-medium hover:bg-slate-50 transition-all shadow-subtle active:scale-95 cursor-pointer"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-700 dark:text-surface-300 text-xs sm:text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors shadow-subtle"
           >
-            <FolderPlus className="w-4 h-4 text-sky-600" />
+            <FolderPlus className="w-4 h-4 text-brand-500" />
             <span>New Folder</span>
           </button>
         )}
 
-        {/* Primary Upload CTA - Soft Electric Cerulean to Iris Gradient */}
+        {/* Quick Upload Action */}
         <button
           onClick={onOpenUpload}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-medium transition-all shadow-sm shadow-sky-600/20 active:scale-95 cursor-pointer"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-medium transition-all shadow-sm active:scale-95"
         >
           <UploadCloud className="w-4 h-4" />
           <span>Upload</span>
@@ -88,7 +89,7 @@ export function Navbar({ onOpenSidebar, onOpenUpload, onOpenNewFolder }) {
           <button
             onClick={installApp}
             title="Install MediaVault as native Desktop/Mobile app"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-sky-700 hover:opacity-95 text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-sky-600/20 active:scale-95 cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-purple-600/20 active:scale-95 cursor-pointer"
           >
             <Download className="w-4 h-4 animate-bounce" />
             <span className="hidden md:inline">Install App</span>
@@ -99,7 +100,7 @@ export function Navbar({ onOpenSidebar, onOpenUpload, onOpenNewFolder }) {
         {!isOnline && (
           <div
             title="Offline Mode Active - in-browser offline tools operational"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-700 text-xs font-bold"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-bold"
           >
             <WifiOff className="w-3.5 h-3.5 animate-pulse" />
             <span className="hidden sm:inline">Offline</span>
@@ -110,12 +111,12 @@ export function Navbar({ onOpenSidebar, onOpenUpload, onOpenNewFolder }) {
         <button
           onClick={toggleTheme}
           title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-          className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors border border-slate-200/70 bg-white shadow-subtle cursor-pointer"
+          className="p-2 rounded-xl text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 shadow-subtle"
         >
           {theme === 'light' ? (
-            <Moon className="w-4 h-4 text-slate-600" />
+            <Moon className="w-4 h-4 text-purple-600" />
           ) : (
-            <Sun className="w-4 h-4 text-amber-500" />
+            <Sun className="w-4 h-4 text-amber-400" />
           )}
         </button>
 
@@ -123,12 +124,12 @@ export function Navbar({ onOpenSidebar, onOpenUpload, onOpenNewFolder }) {
         <div className="relative">
           <button
             onClick={() => setShowDropdown(!showDropdown)}
-            className="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-100/80 transition-colors cursor-pointer"
+            className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-violet-500 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
               {user?.username?.[0] || 'U'}
             </div>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
+            <ChevronDown className="w-3.5 h-3.5 text-surface-400 hidden sm:block" />
           </button>
 
           {showDropdown && (
@@ -137,12 +138,12 @@ export function Navbar({ onOpenSidebar, onOpenUpload, onOpenNewFolder }) {
                 className="fixed inset-0 z-20"
                 onClick={() => setShowDropdown(false)}
               />
-              <div className="absolute right-0 mt-2 w-52 py-1.5 bg-white/95 backdrop-blur-xl rounded-2xl shadow-apple border border-slate-200/80 z-30 animate-in fade-in slide-in-from-top-2 duration-150">
-                <div className="px-4 py-2.5 border-b border-slate-100">
-                  <p className="text-xs font-semibold text-slate-900 truncate">
+              <div className="absolute right-0 mt-2 w-48 py-1.5 bg-white dark:bg-surface-900 rounded-2xl shadow-elevated border border-surface-200 dark:border-surface-800 z-30 animate-scaleUp">
+                <div className="px-4 py-2 border-b border-surface-100 dark:border-surface-800">
+                  <p className="text-xs font-semibold text-surface-900 dark:text-surface-100 truncate">
                     {user?.profile?.fullName || user?.username}
                   </p>
-                  <p className="text-[11px] text-slate-400 truncate mt-0.5">{user?.email}</p>
+                  <p className="text-[11px] text-surface-400 truncate">{user?.email}</p>
                 </div>
 
                 <button
@@ -150,9 +151,9 @@ export function Navbar({ onOpenSidebar, onOpenUpload, onOpenNewFolder }) {
                     setShowDropdown(false);
                     navigate('/profile');
                   }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 text-left transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 text-left transition-colors"
                 >
-                  <User className="w-3.5 h-3.5 text-slate-400" />
+                  <User className="w-3.5 h-3.5 text-surface-500" />
                   <span>Profile Overview</span>
                 </button>
 
@@ -161,23 +162,23 @@ export function Navbar({ onOpenSidebar, onOpenUpload, onOpenNewFolder }) {
                     setShowDropdown(false);
                     navigate('/settings');
                   }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 text-left transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 text-left transition-colors"
                 >
-                  <Settings className="w-3.5 h-3.5 text-slate-400" />
+                  <Settings className="w-3.5 h-3.5 text-surface-500" />
                   <span>Preferences & Settings</span>
                 </button>
 
-                <div className="my-1 border-t border-slate-100" />
+                <div className="my-1 border-t border-surface-100 dark:border-surface-800" />
 
                 <button
                   onClick={() => {
                     setShowDropdown(false);
                     handleLogout();
                   }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 text-left transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-left transition-colors"
                 >
-                  <LogOut className="w-3.5 h-3.5 text-rose-500" />
-                  <span>Sign Out</span>
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Log Out</span>
                 </button>
               </div>
             </>
@@ -187,3 +188,4 @@ export function Navbar({ onOpenSidebar, onOpenUpload, onOpenNewFolder }) {
     </header>
   );
 }
+
