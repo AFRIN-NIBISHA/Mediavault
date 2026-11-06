@@ -96,22 +96,14 @@ export function Navbar({ onOpenSidebar, onOpenUpload, onOpenNewFolder }) {
           </button>
         )}
 
-        {/* Online / Offline status badge */}
-        {!isOnline ? (
+        {/* Offline indicator only shown when network is offline */}
+        {!isOnline && (
           <div
             title="Offline Mode Active - in-browser offline tools operational"
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-bold"
           >
             <WifiOff className="w-3.5 h-3.5 animate-pulse" />
             <span className="hidden sm:inline">Offline</span>
-          </div>
-        ) : (
-          <div
-            title="Online connected"
-            className="hidden xl:flex items-center gap-1 px-2 py-1 rounded-xl bg-emerald-500/10 text-emerald-600 text-[11px] font-semibold"
-          >
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            <span>Online</span>
           </div>
         )}
 
